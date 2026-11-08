@@ -35,6 +35,8 @@ These are set to working defaults so the build can proceed. Changing them is che
 | Supabase organisation | sparkingasia |
 | Development project | `khatabook-dev`, ref `jepcsftdjejjzhfjnavy`, Mumbai, URL https://jepcsftdjejjzhfjnavy.supabase.co |
 | Production project | `khatabook-prod`, ref `ohrnkvzemgfrxcuknamh`, Mumbai, URL https://ohrnkvzemgfrxcuknamh.supabase.co |
-| Foundation migration | Applied to dev on creation day. Prod gets it from the pipeline on the first release tag. |
+| Migrations | All applied to both dev and prod through the Supabase connector on 8 Nov 2026. Later migrations go through the pipeline. |
+| Edge Functions | `run_due_notifications` (every minute) and `backup_to_s3` (22:00 UTC, 3 am Pakistan) deployed on both projects; pg_cron schedules active. |
+| Backups | S3 bucket `duebook-backups`, region ap-south-1, nightly from prod. |
 
 Publishable keys are in `app/.env.example`. They are public by design; row level security does the protecting.
