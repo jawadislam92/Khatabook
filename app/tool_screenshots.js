@@ -42,6 +42,17 @@ async function tapText(page, text) {
   }
   throw new Error('not found: ' + text);
 }
+
+async function hasText(page, t) {
+  return page.evaluate((t) => [...document.querySelectorAll('flt-semantics')].some(e => (e.textContent || '').includes(t)), t);
+}
+async function backUntil(page, t) {
+  for (let i = 0; i < 6; i++) {
+    if (await hasText(page, t)) return;
+    await page.goBack();
+    await page.waitForTimeout(900);
+  }
+}
 async function typeInto(page, label, value) {
   await tapText(page, label);
   await page.keyboard.type(value, { delay: 20 });
@@ -104,25 +115,35 @@ async function typeInto(page, label, value) {
   await tapText(page, 'Yes');
   await page.waitForTimeout(1200);
   await shot(page, '15-party');
-  await tapText(page, 'Gave');
-  await page.waitForTimeout(600);
-  // The first "Gave" is the big button; go back and tap an entry row instead.
-  await page.goBack();
-  await page.waitForTimeout(800);
   await tapText(page, 'motorbike');
   await page.waitForTimeout(800);
   await shot(page, '16-entry-detail');
-  await page.goBack(); await page.waitForTimeout(500);
-  await page.goBack(); await page.waitForTimeout(500);
-  await page.goBack(); await page.waitForTimeout(800);
-  await tapText(page, 'Settings');
-  await tapText(page, 'Big and Simple mode');
-  await tapText(page, 'اردو');
-  await page.goBack();
-  await page.waitForTimeout(800);
-  await tapText(page, 'ذاتی');
+  await backUntil(page, 'Ahmed CCTV');
+  await tapText(page, 'Family');
   await page.waitForTimeout(1200);
-  await shot(page, '17-ledger-home-urdu');
+  await shot(page, '21-family-home');
+  await tapText(page, 'Members');
+  await page.waitForTimeout(1000);
+  await shot(page, '22-members');
+  await tapText(page, 'Invite someone');
+  await page.waitForTimeout(800);
+  await shot(page, '23-invite-role');
+  await tapText(page, 'Invite');
+  await page.waitForTimeout(800);
+  await shot(page, '24-invite-link');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await backUntil(page, 'Who recorded what');
+  await page.evaluate(() => { const els=[...document.querySelectorAll('flt-semantics[role="button"]')].filter(e=>(e.getAttribute('aria-label')||'').includes('Activity')); const r=els[0]?.getBoundingClientRect(); if(r){ window.__act={x:r.x+r.width/2,y:r.y+r.height/2}; } });
+  const act = await page.evaluate(() => window.__act);
+  if (act) { await page.mouse.click(act.x, act.y); await page.waitForTimeout(1000); await shot(page, '25-activity'); await page.goBack(); await page.waitForTimeout(600); }
+  await backUntil(page, 'Ahmed CCTV');
+  await tapText(page, 'Join a group');
+  await page.waitForTimeout(800);
+  await tapText(page, 'Invite link or code');
+  await page.keyboard.type('https://duebook.sparkingasia.com/join/a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90');
+  await tapText(page, 'Check invite');
+  await page.waitForTimeout(1000);
+  await shot(page, '26-join');
 
   await browser.close();
 })().catch(e => { console.error(e); process.exit(1); });

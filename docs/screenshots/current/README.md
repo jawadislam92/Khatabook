@@ -16,3 +16,7 @@ Taken from the web preview build at phone size (412 by 915, 2x). Preview mode us
 | 16 | Entry detail with edit and cancel |
 
 To retake: `flutter build web --release --no-tree-shake-icons --pwa-strategy=none`, serve `build/web` on port 8099, then `node app/tool_screenshots.js <out_dir> http://localhost:8099/ app/build/web/canvaskit`.
+| 21 | Family group home with the who recorded what strip |
+| 22 | Members and settings: invite, roles, month lock, leave |
+| 23, 24 | Invite: choose a role, then the single use link to share |
+| 26 | Join a group from a pasted link, with the preview before joining |
