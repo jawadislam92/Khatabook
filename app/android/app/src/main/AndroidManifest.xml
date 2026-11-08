@@ -32,7 +32,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="com.sparkingissue.duebook" android:host="login-callback"/>
+                <data android:scheme="com.sparkingasia.duebook" android:host="login-callback"/>
             </intent-filter>
         </activity>
         <meta-data

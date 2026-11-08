@@ -17,7 +17,7 @@ if (hasReleaseKey) {
 }
 
 android {
-    namespace = "com.sparkingissue.duebook"
+    namespace = "com.sparkingasia.duebook"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.sparkingissue.duebook"
+        applicationId = "com.sparkingasia.duebook"
         // Android 6 and up. Needed for the biometric prompt and encrypted storage.
         minSdk = 23
         targetSdk = flutter.targetSdkVersion

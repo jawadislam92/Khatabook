@@ -47,6 +47,6 @@ test/                      unit and widget tests
 
 ## Android notes
 
-- Package name `com.sparkingissue.duebook`. Change it in `android/app/build.gradle.kts`, the manifest intent filter, `AppConfig.authRedirect` and the Supabase redirect list together.
+- Package name `com.sparkingasia.duebook`. Change it in `android/app/build.gradle.kts`, the manifest intent filter, `AppConfig.authRedirect` and the Supabase redirect list together.
 - Release signing reads `android/key.properties`, which CI creates from secrets. It is never committed.
 - Release builds are minified and obfuscated. Cloud backup of app data is turned off.

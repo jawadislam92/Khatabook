@@ -22,7 +22,7 @@ These are set to working defaults so the build can proceed. Changing them is che
 | Item | Current default | Change by |
 |---|---|---|
 | App name | **Duebook** (decided 8 Nov 2026) | Settled |
-| Android package name | `com.sparkingissue.duebook` (domain spelling to be confirmed by the owner) | Before creating the Firebase Android app |
+| Android package name | `com.sparkingasia.duebook` (domain confirmed: sparkingasia.com) | Before creating the Firebase Android app |
 | Palette | Teal `#0E8C7F`, blue, saffron `#F59E0B`, indigo, one hue per space kind | Any time |
 | Business name, logo, address, payment details | Sample values in seed data | Before phase 4 |
 | Item catalog | Sample CCTV and solar items in seed data | Before phase 4 |

@@ -1,4 +1,4 @@
-package com.sparkingissue.duebook
+package com.sparkingasia.duebook
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
