@@ -11,7 +11,7 @@ Where secrets go: GitHub repository page, **Settings**, **Secrets and variables*
 Send me in chat:
 
 1. App name as it will appear under the icon. Default is **Khatabook**.
-2. Android package name. Default is **pk.khatabook.app**. If you own a domain, the usual form is the domain backwards plus the app, for example `com.sparkingasia.khatabook`.
+2. Android package name. Default is **com.sparkingissue.duebook**. If you own a domain, the usual form is the domain backwards plus the app, for example `com.sparkingasia.khatabook`.
 3. Keep the colours you saw in the screenshots (teal and blue, saffron, indigo), or tell me the brand colours you want.
 
 These must be settled before Step 3, because the Firebase app is tied to the package name.

@@ -8,7 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/tokens.dart';
 import 'l10n/app_localizations.dart';
 
-class KhatabookApp extends ConsumerWidget {
+class DuebookApp extends ConsumerWidget {
   const KhatabookApp({super.key});
 
   @override

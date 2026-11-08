@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:khatabook/core/settings/app_settings.dart';
-import 'package:khatabook/features/onboarding/onboarding_screen.dart';
+import 'package:duebook/core/settings/app_settings.dart';
+import 'package:duebook/features/onboarding/onboarding_screen.dart';
 
 import 'helpers/pump_app.dart';
 

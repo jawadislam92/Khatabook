@@ -1,6 +1,6 @@
 {
-    "name": "khatabook",
-    "short_name": "khatabook",
+    "name": "Duebook",
+    "short_name": "Duebook",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

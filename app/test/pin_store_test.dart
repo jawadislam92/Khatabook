@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:khatabook/core/security/pin_store.dart';
-import 'package:khatabook/core/security/secure_store.dart';
+import 'package:duebook/core/security/pin_store.dart';
+import 'package:duebook/core/security/secure_store.dart';
 
 void main() {
   late MemorySecureStore store;

@@ -1,4 +1,4 @@
-# Khatabook app
+# Duebook app
 
 Flutter app for Android (iOS later). See the repository root for the plan.
 
@@ -47,6 +47,6 @@ test/                      unit and widget tests
 
 ## Android notes
 
-- Package name `pk.khatabook.app`. Change it in `android/app/build.gradle.kts`, the manifest intent filter, `AppConfig.authRedirect` and the Supabase redirect list together.
+- Package name `com.sparkingissue.duebook`. Change it in `android/app/build.gradle.kts`, the manifest intent filter, `AppConfig.authRedirect` and the Supabase redirect list together.
 - Release signing reads `android/key.properties`, which CI creates from secrets. It is never committed.
 - Release builds are minified and obfuscated. Cloud backup of app data is turned off.

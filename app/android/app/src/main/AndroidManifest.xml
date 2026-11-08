@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
 
     <application
-        android:label="Khatabook"
+        android:label="Duebook"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
@@ -32,7 +32,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="pk.khatabook.app" android:host="login-callback"/>
+                <data android:scheme="com.sparkingissue.duebook" android:host="login-callback"/>
             </intent-filter>
         </activity>
         <meta-data

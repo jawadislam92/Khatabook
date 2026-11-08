@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:khatabook/core/utils/number_words.dart';
+import 'package:duebook/core/utils/number_words.dart';
 
 void main() {
   group('English', () {

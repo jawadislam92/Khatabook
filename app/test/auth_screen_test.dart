@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:khatabook/features/auth/auth_screen.dart';
+import 'package:duebook/features/auth/auth_screen.dart';
 
 import 'helpers/pump_app.dart';
 

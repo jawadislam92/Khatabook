@@ -12,7 +12,7 @@ class AppConfig {
 
   /// Deep link the OAuth flow returns to. Must match the Android manifest and
   /// the Supabase auth redirect allow list.
-  static const authRedirect = 'pk.khatabook.app://login-callback';
+  static const authRedirect = 'com.sparkingissue.duebook://login-callback';
 
   /// True when a real backend is configured. Otherwise the app runs in
   /// preview mode with in memory data, which is what the web preview uses.

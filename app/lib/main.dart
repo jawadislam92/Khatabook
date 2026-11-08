@@ -22,7 +22,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-      child: const KhatabookApp(),
+      child: const DuebookApp(),
     ),
   );
 }

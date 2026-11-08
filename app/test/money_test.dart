@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:khatabook/core/utils/money.dart';
+import 'package:duebook/core/utils/money.dart';
 
 void main() {
   group('Money.format', () {

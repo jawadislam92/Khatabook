@@ -1,4 +1,4 @@
-# Khatabook: Family Ledger and Field Service App
+# Duebook: Family Ledger and Field Service App
 
 One mobile app with two uses:
 
@@ -19,7 +19,7 @@ One mobile app with two uses:
 
 ```
                  +----------------------------------------+
-                 |            Khatabook app               |
+                 |             Duebook app                |
                  |  Personal  |   Family    |  Business   |
                  |   ledger   |   ledger    |  ledger +   |
                  |            |  + group    |  jobs +     |

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:khatabook/core/theme/app_theme.dart';
-import 'package:khatabook/core/theme/tokens.dart';
-import 'package:khatabook/core/widgets/big_button.dart';
+import 'package:duebook/core/theme/app_theme.dart';
+import 'package:duebook/core/theme/tokens.dart';
+import 'package:duebook/core/widgets/big_button.dart';
 
 import 'helpers/pump_app.dart';
 

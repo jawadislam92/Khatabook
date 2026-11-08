@@ -1,4 +1,4 @@
-package pk.khatabook.app
+package com.sparkingissue.duebook
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
