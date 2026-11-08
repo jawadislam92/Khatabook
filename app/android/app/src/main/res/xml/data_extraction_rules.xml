@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nothing from this app goes into Android cloud backups or device transfers.
+     Ledger data lives on the server; local copies and the PIN hash stay on this phone. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root"/>
+        <exclude domain="sharedpref"/>
+        <exclude domain="database"/>
+        <exclude domain="file"/>
+        <exclude domain="external"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root"/>
+        <exclude domain="sharedpref"/>
+        <exclude domain="database"/>
+        <exclude domain="file"/>
+        <exclude domain="external"/>
+    </device-transfer>
+</data-extraction-rules>
