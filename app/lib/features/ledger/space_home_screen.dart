@@ -7,6 +7,9 @@ import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
+import '../groups/groups_models.dart';
+import '../groups/groups_repository.dart';
+import '../groups/role_labels.dart';
 import '../spaces/spaces_repository.dart';
 import 'ledger_models.dart';
 import 'ledger_repository.dart';
@@ -63,6 +66,19 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
       appBar: AppBar(
         title: Text(spaceName),
         actions: [
+          if (space != null && space.kind == SpaceKind.group) ...[
+            IconButton(
+              tooltip: l.activity,
+              icon: const Icon(Icons.history),
+              onPressed: () =>
+                  context.push('/space/${widget.spaceId}/activity'),
+            ),
+            IconButton(
+              tooltip: l.members,
+              icon: const Icon(Icons.group_outlined),
+              onPressed: () => context.push('/space/${widget.spaceId}/members'),
+            ),
+          ],
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'csv') shareCsv(context, ref, widget.spaceId, spaceName);
@@ -130,6 +146,10 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
                 ),
               ],
             ),
+            if (space != null && space.kind == SpaceKind.group) ...[
+              const SizedBox(height: Tokens.s5),
+              _ByMember(spaceId: widget.spaceId),
+            ],
             if (reminders.isNotEmpty) ...[
               const SizedBox(height: Tokens.s5),
               Text(
@@ -501,6 +521,115 @@ class _ReminderTile extends ConsumerWidget {
         ),
         onTap: () => context.push('/space/$spaceId/party/${pb.party.id}'),
       ),
+    );
+  }
+}
+
+class _ByMember extends ConsumerWidget {
+  const _ByMember({required this.spaceId});
+  final String spaceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final members =
+        ref.watch(membersProvider(spaceId)).value ?? const <Member>[];
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final active = members.where((m) => m.entriesCount > 0).toList()
+      ..sort((a, b) => b.entriesCount.compareTo(a.entriesCount));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.byMember,
+                style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/space/$spaceId/members'),
+              child: Text(l.members),
+            ),
+          ],
+        ),
+        const SizedBox(height: Tokens.s2),
+        if (active.isEmpty)
+          Text(
+            l.noActivity,
+            style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+          )
+        else
+          SizedBox(
+            height: 118,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: active.length,
+              separatorBuilder: (_, _) => const SizedBox(width: Tokens.s2),
+              itemBuilder: (_, i) {
+                final m = active[i];
+                return Container(
+                  width: 168,
+                  padding: const EdgeInsets.all(Tokens.s3),
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(Tokens.radius),
+                    border: Border.all(color: scheme.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        m.name,
+                        style: text.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${roleLabel(l, m.role)}  ·  ${l.entriesByMember(m.entriesCount)}',
+                        style: text.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                      ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_outward_rounded,
+                            size: 14,
+                            color: MoneyText.colorFor(context, true),
+                          ),
+                          Text(
+                            ' ${m.gavePaisa ~/ 100}  ',
+                            style: text.labelMedium?.copyWith(
+                              fontFamily: 'Roboto',
+                            ),
+                          ),
+                          Icon(
+                            Icons.call_received_rounded,
+                            size: 14,
+                            color: MoneyText.colorFor(context, false),
+                          ),
+                          Text(
+                            ' ${m.gotPaisa ~/ 100}',
+                            style: text.labelMedium?.copyWith(
+                              fontFamily: 'Roboto',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

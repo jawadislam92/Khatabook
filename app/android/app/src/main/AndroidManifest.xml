@@ -34,6 +34,14 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="com.sparkingasia.duebook" android:host="login-callback"/>
             </intent-filter>
+            <!-- Invite links: https://duebook.sparkingasia.com/join/<code>. autoVerify becomes true once
+                 the assetlinks.json file is published on that subdomain. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="duebook.sparkingasia.com" android:pathPrefix="/join/"/>
+            </intent-filter>
         </activity>
         <meta-data
             android:name="flutterEmbedding"

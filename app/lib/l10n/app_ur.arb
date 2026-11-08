@@ -347,5 +347,160 @@
         "type": "String"
       }
     }
-  }
+  },
+  "members": "اراکین",
+  "membersAndSettings": "اراکین اور سیٹنگز",
+  "invite": "دعوت دیں",
+  "inviteSomeone": "کسی کو شامل کریں",
+  "inviteAs": "بطور",
+  "roleOwner": "مالک",
+  "roleManager": "منیجر",
+  "roleMember": "رکن",
+  "roleViewer": "ناظر",
+  "roleOwnerHint": "سب کچھ، مہینہ لاک کرنا اور لوگوں کو نکالنا بھی۔",
+  "roleManagerHint": "اندراج لکھتا اور بدلتا ہے، لوگ اور دعوتیں سنبھالتا ہے۔",
+  "roleMemberHint": "اندراج لکھتا ہے اور سب کچھ دیکھتا ہے۔",
+  "roleViewerHint": "سب کچھ دیکھتا ہے، کچھ بدلتا نہیں۔",
+  "inviteLinkReady": "لنک تیار ہے۔ ایک بار چلتا ہے اور 48 گھنٹے میں ختم ہو جاتا ہے۔",
+  "shareLink": "لنک بھیجیں",
+  "copyLink": "لنک کاپی کریں",
+  "copied": "کاپی ہو گیا",
+  "inviteMessage": "ڈیو بک پر ہمارے {space} گروپ میں شامل ہوں: {link}",
+  "@inviteMessage": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "joinGroup": "گروپ میں شامل ہوں",
+  "joinHint": "جو دعوتی لنک یا کوڈ ملا ہے وہ یہاں لکھیں۔",
+  "inviteLinkOrCode": "دعوتی لنک یا کوڈ",
+  "checkInvite": "دعوت چیک کریں",
+  "invitePreviewText": "{inviter} نے آپ کو {space} میں بطور {role} شامل ہونے کی دعوت دی ہے۔",
+  "@invitePreviewText": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "space": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteInvalid": "یہ دعوت اب کارآمد نہیں۔ نیا لنک مانگیں۔",
+  "inviteNotFound": "یہ ڈیو بک کی دعوت نہیں لگتی۔",
+  "join": "شامل ہوں",
+  "joined": "آپ {space} میں شامل ہو گئے۔",
+  "@joined": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      }
+    }
+  },
+  "changeRole": "کردار بدلیں",
+  "removeFromGroup": "گروپ سے نکالیں",
+  "removeConfirm": "{name} کو اس گروپ سے نکالیں؟ ان کے اندراجات رہیں گے۔",
+  "@removeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "نکالیں",
+  "leaveGroup": "یہ گروپ چھوڑیں",
+  "leaveConfirm": "{space} چھوڑ دیں؟ واپس آنے کے لیے نئی دعوت چاہیے ہوگی۔",
+  "@leaveConfirm": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      }
+    }
+  },
+  "leave": "چھوڑیں",
+  "you": "آپ",
+  "joinedOn": "{date} کو شامل ہوئے",
+  "@joinedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entriesByMember": "{count, plural, =0{ابھی کوئی اندراج نہیں} =1{1 اندراج} other{{count} اندراجات}}",
+  "@entriesByMember": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "byMember": "کس نے کیا لکھا",
+  "activity": "سرگرمی",
+  "noActivity": "یہاں ابھی کچھ نہیں ہوا۔",
+  "activityAdded": "{actor} نے {party} {direction} {amount} روپے لکھے",
+  "@activityAdded": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      },
+      "party": {
+        "type": "String"
+      }
+    }
+  },
+  "activityCancelled": "{actor} نے {party} کے ساتھ {amount} روپے کا اندراج منسوخ کیا",
+  "@activityCancelled": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "party": {
+        "type": "String"
+      }
+    }
+  },
+  "activityJoined": "{actor} شامل ہوئے",
+  "@activityJoined": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "givenTo": "کو دیے",
+  "receivedFrom": "سے ملے",
+  "monthLock": "مہینہ لاک",
+  "monthLockHint": "لاک کی تاریخ یا اس سے پہلے کے اندراج نہ لکھے جا سکتے ہیں، نہ بدلے، نہ منسوخ۔",
+  "lockedUntil": "{date} تک لاک ہے",
+  "@lockedUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notLocked": "لاک نہیں",
+  "lockUpToLastMonth": "پچھلے مہینے کے آخر تک لاک کریں",
+  "pickLockDate": "تاریخ چنیں",
+  "unlock": "لاک کھولیں",
+  "onlyOwner": "صرف مالک یہ بدل سکتا ہے۔",
+  "groupSettings": "گروپ سیٹنگز"
 }

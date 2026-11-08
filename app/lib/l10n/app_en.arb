@@ -347,5 +347,160 @@
         "type": "String"
       }
     }
-  }
+  },
+  "members": "Members",
+  "membersAndSettings": "Members and settings",
+  "invite": "Invite",
+  "inviteSomeone": "Invite someone",
+  "inviteAs": "Invite as",
+  "roleOwner": "Owner",
+  "roleManager": "Manager",
+  "roleMember": "Member",
+  "roleViewer": "Viewer",
+  "roleOwnerHint": "Everything, including locking months and removing people.",
+  "roleManagerHint": "Adds and edits entries, manages people and invites.",
+  "roleMemberHint": "Adds entries and sees everything.",
+  "roleViewerHint": "Sees everything, changes nothing.",
+  "inviteLinkReady": "Link ready. It works once and expires in 48 hours.",
+  "shareLink": "Share link",
+  "copyLink": "Copy link",
+  "copied": "Copied",
+  "inviteMessage": "Join our {space} group on Duebook: {link}",
+  "@inviteMessage": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "joinGroup": "Join a group",
+  "joinHint": "Paste the invite link or the code you were sent.",
+  "inviteLinkOrCode": "Invite link or code",
+  "checkInvite": "Check invite",
+  "invitePreviewText": "{inviter} invited you to join {space} as {role}.",
+  "@invitePreviewText": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "space": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteInvalid": "This invite is not valid any more. Ask for a new link.",
+  "inviteNotFound": "That does not look like a Duebook invite.",
+  "join": "Join",
+  "joined": "You joined {space}.",
+  "@joined": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      }
+    }
+  },
+  "changeRole": "Change role",
+  "removeFromGroup": "Remove from group",
+  "removeConfirm": "Remove {name} from this group? Their entries stay.",
+  "@removeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "Remove",
+  "leaveGroup": "Leave this group",
+  "leaveConfirm": "Leave {space}? You will need a new invite to come back.",
+  "@leaveConfirm": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      }
+    }
+  },
+  "leave": "Leave",
+  "you": "You",
+  "joinedOn": "Joined {date}",
+  "@joinedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "entriesByMember": "{count, plural, =0{No entries yet} =1{1 entry} other{{count} entries}}",
+  "@entriesByMember": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "byMember": "Who recorded what",
+  "activity": "Activity",
+  "noActivity": "Nothing has happened here yet.",
+  "activityAdded": "{actor} added Rs {amount} {direction} {party}",
+  "@activityAdded": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      },
+      "party": {
+        "type": "String"
+      }
+    }
+  },
+  "activityCancelled": "{actor} cancelled an entry of Rs {amount} with {party}",
+  "@activityCancelled": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "party": {
+        "type": "String"
+      }
+    }
+  },
+  "activityJoined": "{actor} joined",
+  "@activityJoined": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "givenTo": "given to",
+  "receivedFrom": "received from",
+  "monthLock": "Month lock",
+  "monthLockHint": "Entries dated on or before the lock date cannot be added, changed or cancelled.",
+  "lockedUntil": "Locked up to {date}",
+  "@lockedUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notLocked": "Not locked",
+  "lockUpToLastMonth": "Lock up to end of last month",
+  "pickLockDate": "Pick a date",
+  "unlock": "Unlock",
+  "onlyOwner": "Only the owner can change this.",
+  "groupSettings": "Group settings"
 }

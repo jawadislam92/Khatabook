@@ -23,10 +23,26 @@ class SpacesScreen extends ConsumerWidget {
     final today = DateFormat.yMMMMEEEEd(locale).format(DateTime.now());
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createGroup(context, ref),
-        icon: const Icon(Icons.group_add_outlined),
-        label: Text(l.newGroup),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'join',
+            backgroundColor: scheme.surface,
+            foregroundColor: scheme.primary,
+            onPressed: () => context.push('/join'),
+            icon: const Icon(Icons.link),
+            label: Text(l.joinGroup),
+          ),
+          const SizedBox(height: Tokens.s3),
+          FloatingActionButton.extended(
+            heroTag: 'new-group',
+            onPressed: () => _createGroup(context, ref),
+            icon: const Icon(Icons.group_add_outlined),
+            label: Text(l.newGroup),
+          ),
+        ],
       ),
       body: CustomScrollView(
         slivers: [

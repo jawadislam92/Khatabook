@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_repository.dart';
 import '../../features/auth/auth_screen.dart';
+import '../../features/groups/activity_screen.dart';
+import '../../features/groups/join_screen.dart';
+import '../../features/groups/members_screen.dart';
 import '../../features/ledger/add_entry_screen.dart';
 import '../../features/ledger/entry_detail_screen.dart';
 import '../../features/ledger/ledger_models.dart';
@@ -58,6 +61,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, st) => SpaceHomeScreen(spaceId: st.pathParameters['sid']!),
         routes: [
           GoRoute(
+            path: 'members',
+            builder: (_, st) =>
+                MembersScreen(spaceId: st.pathParameters['sid']!),
+          ),
+          GoRoute(
+            path: 'activity',
+            builder: (_, st) =>
+                ActivityScreen(spaceId: st.pathParameters['sid']!),
+          ),
+          GoRoute(
             path: 'add',
             builder: (_, st) => AddEntryScreen(
               spaceId: st.pathParameters['sid']!,
@@ -87,6 +100,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(
+        path: '/join',
+        builder: (_, st) => JoinScreen(token: st.uri.queryParameters['token']),
+      ),
       GoRoute(
         path: '/change-pin',
         builder: (context, _) => SetPinScreen(onDone: () => context.pop()),
