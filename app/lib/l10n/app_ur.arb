@@ -32,7 +32,13 @@
   "haveAccount": "پہلے سے اکاؤنٹ ہے؟ سائن ان کریں",
   "checkEmail": "اپنی ای میل دیکھیں",
   "checkEmailBody": "ہم نے {email} پر تصدیقی لنک بھیجا ہے۔ اسے دبائیں، پھر واپس آ کر سائن ان کریں۔",
-  "@checkEmailBody": {"placeholders": {"email": {"type": "String"}}},
+  "@checkEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "resetSent": "اگر اس ای میل کا اکاؤنٹ ہے تو ری سیٹ لنک بھیج دیا گیا ہے۔",
   "errorInvalidEmail": "یہ ای میل ٹھیک نہیں لگتی۔",
   "errorPasswordWeak": "کم از کم 10 حروف استعمال کریں، جن میں بڑا حرف، چھوٹا حرف اور ایک ہندسہ ہو۔",
@@ -48,9 +54,21 @@
   "pinTooShort": "کم از کم 4 ہندسے استعمال کریں۔",
   "enterPin": "اپنا پن لکھیں",
   "wrongPin": "غلط پن۔ {remaining} کوششیں باقی ہیں۔",
-  "@wrongPin": {"placeholders": {"remaining": {"type": "int"}}},
+  "@wrongPin": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "lockedOut": "بہت زیادہ غلط کوششیں۔ {seconds} سیکنڈ انتظار کریں۔",
-  "@lockedOut": {"placeholders": {"seconds": {"type": "int"}}},
+  "@lockedOut": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "useFingerprint": "فنگر پرنٹ یا چہرہ استعمال کریں",
   "biometricReason": "ڈیو بک کھولیں",
   "biometricAskTitle": "فنگر پرنٹ یا چہرے سے کھولیں؟",
@@ -64,7 +82,13 @@
   "spaceKindFamily": "مشترکہ گروپ",
   "spaceKindBusiness": "کاروبار",
   "membersCount": "{count, plural, =1{1 رکن} other{{count} اراکین}}",
-  "@membersCount": {"placeholders": {"count": {"type": "int"}}},
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "newGroup": "نیا گروپ",
   "newGroupTitle": "گروپ کا نام",
   "newGroupHint": "مثلاً فیملی، یا کاروبار کا نام۔",
@@ -92,12 +116,214 @@
   "signOutConfirm": "اس فون پر ڈیو بک سے سائن آؤٹ کریں؟",
   "settingsAbout": "ایپ کے بارے میں",
   "version": "ورژن {version}",
-  "@version": {"placeholders": {"version": {"type": "String"}}},
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "demoBanner": "پیش نظارہ بلڈ۔ کچھ بھی سرور پر محفوظ نہیں ہوتا۔",
   "youWillGet": "آپ کو ملیں گے",
   "youWillGive": "آپ نے دینے ہیں",
   "rupees": "{amount} روپے",
-  "@rupees": {"placeholders": {"amount": {"type": "String"}}},
+  "@rupees": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "greeting": "السلام علیکم، {name}",
-  "@greeting": {"placeholders": {"name": {"type": "String"}}}
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "iGaveMoney": "میں نے پیسے دیے",
+  "iGotMoney": "مجھے پیسے ملے",
+  "gave": "دیے",
+  "got": "ملے",
+  "people": "لوگ",
+  "searchPeople": "نام سے تلاش کریں",
+  "newPerson": "نیا شخص",
+  "editPerson": "شخص میں ترمیم",
+  "personName": "نام",
+  "phoneOptional": "فون (اختیاری)",
+  "noPeopleYet": "ابھی کوئی نہیں۔ پہلا شخص شامل کریں جس سے آپ کا لین دین ہے۔",
+  "noMatches": "اس نام کا کوئی نہیں ملا۔",
+  "settled": "حساب برابر",
+  "nothingDue": "کچھ باقی نہیں",
+  "entries": "اندراجات",
+  "noEntriesYet": "ابھی کوئی اندراج نہیں۔ اوپر بٹن دبا کر پہلا اندراج کریں۔",
+  "whoIsThis": "یہ کس کے ساتھ ہے؟",
+  "howMuch": "کتنے؟",
+  "date": "تاریخ",
+  "today": "آج",
+  "yesterday": "کل",
+  "noteOptional": "نوٹ (اختیاری)",
+  "noteHint": "مثلاً: اسکول فیس کے لیے",
+  "amountRequired": "رقم لکھیں۔",
+  "personRequired": "کوئی شخص چنیں۔",
+  "confirmGave": "آپ نے {date} کو {name} کو {amount} روپے دیے۔ ٹھیک ہے؟",
+  "@confirmGave": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmGot": "آپ کو {date} کو {name} سے {amount} روپے ملے۔ ٹھیک ہے؟",
+  "@confirmGot": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "saved": "محفوظ ہو گیا",
+  "youGaveTo": "آپ نے {name} کو دیے",
+  "@youGaveTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youGotFrom": "آپ کو {name} سے ملے",
+  "@youGotFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addedBy": "{name} نے لکھا",
+  "@addedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "edited": "ترمیم شدہ",
+  "cancelled": "منسوخ",
+  "reversalNote": "منسوخ شدہ اندراج کی واپسی",
+  "editEntry": "ترمیم",
+  "cancelEntry": "یہ اندراج منسوخ کریں",
+  "cancelEntryBody": "اندراج تاریخ میں کٹا ہوا نظر آتا رہے گا اور بیلنس پہلے جیسا ہو جائے گا۔ کچھ بھی حذف نہیں ہوتا۔",
+  "cancelEntryReason": "وجہ (اختیاری)",
+  "keepEntry": "رہنے دیں",
+  "yesCancelEntry": "جی، منسوخ کریں",
+  "cannotChange": "یہ اندراج تبدیل نہیں ہو سکتا۔",
+  "remind": "یاد دہانی",
+  "setReminder": "یاد دہانی لگائیں",
+  "reminderDue": "{date} تک",
+  "@reminderDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reminders": "یاد دہانیاں",
+  "markDone": "ہو گیا",
+  "sendWhatsApp": "واٹس ایپ پر بھیجیں",
+  "sendSms": "ایس ایم ایس بھیجیں",
+  "reminderMessageGet": "سلام {name}، آپ کی طرف {amount} روپے باقی ہیں۔ شکریہ۔",
+  "@reminderMessageGet": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderMessageGive": "سلام {name}، میری طرف آپ کے {amount} روپے باقی ہیں۔ جلد ادا کر دوں گا۔ شکریہ۔",
+  "@reminderMessageGive": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statement": "اسٹیٹمنٹ",
+  "statementPdf": "اسٹیٹمنٹ بھیجیں (PDF)",
+  "exportCsv": "CSV ایکسپورٹ",
+  "statementTitle": "کھاتے کی اسٹیٹمنٹ",
+  "openingBalance": "ابتدائی بیلنس",
+  "closingBalance": "آخری بیلنس",
+  "runningBalance": "بیلنس",
+  "amount": "رقم",
+  "generatedOn": "{date} کو ڈیو بک سے بنایا گیا",
+  "@generatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceOnDate": "{name} {amount} روپے دیں گے",
+  "@balanceOnDate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "youWillGetFrom": "آپ کو {name} سے {amount} روپے ملیں گے",
+  "@youWillGetFrom": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youWillGiveTo": "آپ نے {name} کو {amount} روپے دینے ہیں",
+  "@youWillGiveTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "totalGave": "کل دیے",
+  "totalGot": "کل ملے",
+  "noPhone": "{name} کا فون نمبر محفوظ نہیں۔ یاد دہانی بھیجنے کے لیے نمبر لکھیں۔",
+  "@noPhone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotOpenApp": "یہ ایپ اس فون پر نہیں کھل سکی۔"
 }

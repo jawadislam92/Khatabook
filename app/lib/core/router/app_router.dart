@@ -4,6 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_repository.dart';
 import '../../features/auth/auth_screen.dart';
+import '../../features/ledger/add_entry_screen.dart';
+import '../../features/ledger/entry_detail_screen.dart';
+import '../../features/ledger/ledger_models.dart';
+import '../../features/ledger/party_screen.dart';
+import '../../features/ledger/space_home_screen.dart';
 import '../../features/lock/lock_screen.dart';
 import '../../features/lock/set_pin_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
@@ -48,6 +53,39 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/set-pin', builder: (_, _) => const SetPinScreen()),
       GoRoute(path: '/lock', builder: (_, _) => const LockScreen()),
       GoRoute(path: '/spaces', builder: (_, _) => const SpacesScreen()),
+      GoRoute(
+        path: '/space/:sid',
+        builder: (_, st) => SpaceHomeScreen(spaceId: st.pathParameters['sid']!),
+        routes: [
+          GoRoute(
+            path: 'add',
+            builder: (_, st) => AddEntryScreen(
+              spaceId: st.pathParameters['sid']!,
+              direction: st.uri.queryParameters['direction'] == 'got'
+                  ? EntryDirection.got
+                  : EntryDirection.gave,
+              partyId: st.uri.queryParameters['party'],
+            ),
+          ),
+          GoRoute(
+            path: 'party/:pid',
+            builder: (_, st) => PartyScreen(
+              spaceId: st.pathParameters['sid']!,
+              partyId: st.pathParameters['pid']!,
+            ),
+            routes: [
+              GoRoute(
+                path: 'entry/:eid',
+                builder: (_, st) => EntryDetailScreen(
+                  spaceId: st.pathParameters['sid']!,
+                  partyId: st.pathParameters['pid']!,
+                  entryId: st.pathParameters['eid']!,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(
         path: '/change-pin',

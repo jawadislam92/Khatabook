@@ -340,9 +340,7 @@ class _SpaceTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(Tokens.radius),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(l.comingSoon))),
+          onTap: () => context.push('/space/${space.id}'),
           child: Row(
             children: [
               Container(width: 8, height: 96, color: hue),

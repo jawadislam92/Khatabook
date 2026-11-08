@@ -32,7 +32,13 @@
   "haveAccount": "Already have an account? Sign in",
   "checkEmail": "Check your email",
   "checkEmailBody": "We sent a confirmation link to {email}. Tap it, then come back and sign in.",
-  "@checkEmailBody": {"placeholders": {"email": {"type": "String"}}},
+  "@checkEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "resetSent": "If that email has an account, a reset link is on its way.",
   "errorInvalidEmail": "That email address does not look right.",
   "errorPasswordWeak": "Please use at least 10 characters with a capital letter, a small letter and a number.",
@@ -48,9 +54,21 @@
   "pinTooShort": "Use at least 4 digits.",
   "enterPin": "Enter your PIN",
   "wrongPin": "Wrong PIN. {remaining} tries left.",
-  "@wrongPin": {"placeholders": {"remaining": {"type": "int"}}},
+  "@wrongPin": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "lockedOut": "Too many wrong tries. Wait {seconds} seconds.",
-  "@lockedOut": {"placeholders": {"seconds": {"type": "int"}}},
+  "@lockedOut": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "useFingerprint": "Use fingerprint or face",
   "biometricReason": "Unlock Duebook",
   "biometricAskTitle": "Unlock with fingerprint or face?",
@@ -64,7 +82,13 @@
   "spaceKindFamily": "Shared group",
   "spaceKindBusiness": "Business",
   "membersCount": "{count, plural, =1{1 member} other{{count} members}}",
-  "@membersCount": {"placeholders": {"count": {"type": "int"}}},
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "newGroup": "New group",
   "newGroupTitle": "Name the group",
   "newGroupHint": "For example Family, or the business name.",
@@ -92,12 +116,214 @@
   "signOutConfirm": "Sign out of Duebook on this phone?",
   "settingsAbout": "About",
   "version": "Version {version}",
-  "@version": {"placeholders": {"version": {"type": "String"}}},
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "demoBanner": "Preview build. Nothing is saved to a server.",
   "youWillGet": "You will get",
   "youWillGive": "You will give",
   "rupees": "Rs {amount}",
-  "@rupees": {"placeholders": {"amount": {"type": "String"}}},
+  "@rupees": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "greeting": "Assalam o Alaikum, {name}",
-  "@greeting": {"placeholders": {"name": {"type": "String"}}}
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "iGaveMoney": "I gave money",
+  "iGotMoney": "I got money",
+  "gave": "Gave",
+  "got": "Got",
+  "people": "People",
+  "searchPeople": "Search by name",
+  "newPerson": "New person",
+  "editPerson": "Edit person",
+  "personName": "Name",
+  "phoneOptional": "Phone (optional)",
+  "noPeopleYet": "Nobody here yet. Add the first person you deal with.",
+  "noMatches": "No one matches that name.",
+  "settled": "Settled",
+  "nothingDue": "Nothing due",
+  "entries": "Entries",
+  "noEntriesYet": "No entries yet. Tap a button above to add the first one.",
+  "whoIsThis": "Who is this with?",
+  "howMuch": "How much?",
+  "date": "Date",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "noteOptional": "Note (optional)",
+  "noteHint": "For example: for school fees",
+  "amountRequired": "Enter an amount.",
+  "personRequired": "Pick a person.",
+  "confirmGave": "You gave Rs {amount} to {name} on {date}. Correct?",
+  "@confirmGave": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmGot": "You got Rs {amount} from {name} on {date}. Correct?",
+  "@confirmGot": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "saved": "Saved",
+  "youGaveTo": "You gave to {name}",
+  "@youGaveTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youGotFrom": "You got from {name}",
+  "@youGotFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addedBy": "Added by {name}",
+  "@addedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "edited": "Edited",
+  "cancelled": "Cancelled",
+  "reversalNote": "Reversal of a cancelled entry",
+  "editEntry": "Edit",
+  "cancelEntry": "Cancel this entry",
+  "cancelEntryBody": "The entry stays in the history, struck through, and the balance goes back to what it was. Nothing is deleted.",
+  "cancelEntryReason": "Reason (optional)",
+  "keepEntry": "Keep it",
+  "yesCancelEntry": "Yes, cancel it",
+  "cannotChange": "This entry cannot be changed.",
+  "remind": "Remind",
+  "setReminder": "Set a reminder",
+  "reminderDue": "Due {date}",
+  "@reminderDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reminders": "Reminders",
+  "markDone": "Done",
+  "sendWhatsApp": "Send on WhatsApp",
+  "sendSms": "Send SMS",
+  "reminderMessageGet": "Salam {name}, aap ki taraf Rs {amount} baqaya hain. Shukriya.",
+  "@reminderMessageGet": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderMessageGive": "Salam {name}, meri taraf aap ke Rs {amount} baqaya hain. Jald ada kar doon ga. Shukriya.",
+  "@reminderMessageGive": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statement": "Statement",
+  "statementPdf": "Share statement (PDF)",
+  "exportCsv": "Export CSV",
+  "statementTitle": "Account statement",
+  "openingBalance": "Opening balance",
+  "closingBalance": "Closing balance",
+  "runningBalance": "Balance",
+  "amount": "Amount",
+  "generatedOn": "Generated on {date} with Duebook",
+  "@generatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "balanceOnDate": "{name} will give Rs {amount}",
+  "@balanceOnDate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "youWillGetFrom": "You will get Rs {amount} from {name}",
+  "@youWillGetFrom": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youWillGiveTo": "You will give Rs {amount} to {name}",
+  "@youWillGiveTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "totalGave": "Total given",
+  "totalGot": "Total received",
+  "noPhone": "No phone number saved for {name}. Add one to send a reminder.",
+  "@noPhone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotOpenApp": "Could not open that app on this phone."
 }
