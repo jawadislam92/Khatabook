@@ -242,7 +242,7 @@
   },
   "reminders": "Reminders",
   "markDone": "Done",
-  "sendWhatsApp": "Send on WhatsApp",
+  "sendWhatsApp": "WhatsApp",
   "sendSms": "Send SMS",
   "reminderMessageGet": "Salam {name}, aap ki taraf Rs {amount} baqaya hain. Shukriya.",
   "@reminderMessageGet": {
@@ -325,5 +325,27 @@
       }
     }
   },
-  "couldNotOpenApp": "Could not open that app on this phone."
+  "couldNotOpenApp": "Could not open that app on this phone.",
+  "confirmGaveToday": "You gave Rs {amount} to {name} today. Correct?",
+  "@confirmGaveToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmGotToday": "You got Rs {amount} from {name} today. Correct?",
+  "@confirmGotToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,5 +1,4 @@
 // Usage: node tool_screenshots.js <out_dir> <base_url> <path_to_build/web/canvaskit>
-// Needs the web preview served at base_url. See docs/screenshots/phase0/README.md.
 // Drives the web preview through the real screens and takes phone sized screenshots.
 const { chromium } = require('playwright');
 const path = require('path');
@@ -27,7 +26,7 @@ async function tapText(page, text) {
   while (Date.now() < deadline) {
     const box = await page.evaluate((t) => {
       const els = [...document.querySelectorAll('flt-semantics, input, textarea')]
-        .filter(e => (e.textContent || '').trim().startsWith(t) || (e.getAttribute('aria-label') || '').startsWith(t))
+        .filter(e => (e.textContent || '').includes(t) || (e.getAttribute('aria-label') || '').includes(t))
         .map(e => ({ r: e.getBoundingClientRect(), pri: (e.getAttribute('role') === 'button' || e.tagName === 'INPUT') ? 0 : 1 }))
         .filter(x => x.r.width > 0 && x.r.height > 0)
         .sort((a, b) => a.pri - b.pri || a.r.width * a.r.height - b.r.width * b.r.height)
@@ -92,14 +91,38 @@ async function typeInto(page, label, value) {
   await page.waitForTimeout(1500);
 
   await shot(page, '07-spaces-simple');
-  await tapText(page, 'Settings');
-  await shot(page, '08-settings');
-  await tapText(page, 'Big and Simple mode');
-  await tapText(page, 'اردو');
-  await shot(page, '09-settings-urdu-standard');
+  await tapText(page, 'Personal');
+  await page.waitForTimeout(1200);
+  await shot(page, '11-ledger-home-simple');
+  await tapText(page, 'I gave money');
+  await shot(page, '12-pick-person');
+  await tapText(page, 'Bilal Bhai');
+  for (const d of ['5', '0', '0', '0']) await tapText(page, d);
+  await shot(page, '13-amount');
+  await tapText(page, 'Save');
+  await shot(page, '14-confirm');
+  await tapText(page, 'Yes');
+  await page.waitForTimeout(1200);
+  await shot(page, '15-party');
+  await tapText(page, 'Gave');
+  await page.waitForTimeout(600);
+  // The first "Gave" is the big button; go back and tap an entry row instead.
   await page.goBack();
   await page.waitForTimeout(800);
-  await shot(page, '10-spaces-urdu');
+  await tapText(page, 'motorbike');
+  await page.waitForTimeout(800);
+  await shot(page, '16-entry-detail');
+  await page.goBack(); await page.waitForTimeout(500);
+  await page.goBack(); await page.waitForTimeout(500);
+  await page.goBack(); await page.waitForTimeout(800);
+  await tapText(page, 'Settings');
+  await tapText(page, 'Big and Simple mode');
+  await tapText(page, 'اردو');
+  await page.goBack();
+  await page.waitForTimeout(800);
+  await tapText(page, 'ذاتی');
+  await page.waitForTimeout(1200);
+  await shot(page, '17-ledger-home-urdu');
 
   await browser.close();
 })().catch(e => { console.error(e); process.exit(1); });

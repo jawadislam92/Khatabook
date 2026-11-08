@@ -242,7 +242,7 @@
   },
   "reminders": "یاد دہانیاں",
   "markDone": "ہو گیا",
-  "sendWhatsApp": "واٹس ایپ پر بھیجیں",
+  "sendWhatsApp": "واٹس ایپ",
   "sendSms": "ایس ایم ایس بھیجیں",
   "reminderMessageGet": "سلام {name}، آپ کی طرف {amount} روپے باقی ہیں۔ شکریہ۔",
   "@reminderMessageGet": {
@@ -325,5 +325,27 @@
       }
     }
   },
-  "couldNotOpenApp": "یہ ایپ اس فون پر نہیں کھل سکی۔"
+  "couldNotOpenApp": "یہ ایپ اس فون پر نہیں کھل سکی۔",
+  "confirmGaveToday": "آپ نے آج {name} کو {amount} روپے دیے۔ ٹھیک ہے؟",
+  "@confirmGaveToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmGotToday": "آپ کو آج {name} سے {amount} روپے ملے۔ ٹھیک ہے؟",
+  "@confirmGotToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

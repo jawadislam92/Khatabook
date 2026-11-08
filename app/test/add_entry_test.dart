@@ -30,9 +30,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
       expect(
-        find.textContaining(
-          'You gave Rs 5,000 to Bilal Bhai on Today. Correct?',
-        ),
+        find.textContaining('You gave Rs 5,000 to Bilal Bhai today. Correct?'),
         findsOneWidget,
       );
       await tester.tap(find.text('Yes'));

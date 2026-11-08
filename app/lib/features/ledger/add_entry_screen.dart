@@ -367,9 +367,18 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
     final amount = Money.format(_paisa);
     final date = friendlyDate(context, _date);
     final gave = widget.direction == EntryDirection.gave;
-    final sentence = gave
-        ? l.confirmGave(amount, name, date)
-        : l.confirmGot(amount, name, date);
+    final now = DateTime.now();
+    final isToday =
+        _date.year == now.year &&
+        _date.month == now.month &&
+        _date.day == now.day;
+    final sentence = isToday
+        ? (gave
+              ? l.confirmGaveToday(amount, name)
+              : l.confirmGotToday(amount, name))
+        : (gave
+              ? l.confirmGave(amount, name, date)
+              : l.confirmGot(amount, name, date));
     final yes = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
