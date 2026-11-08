@@ -20,3 +20,8 @@ To retake: `flutter build web --release --no-tree-shake-icons --pwa-strategy=non
 | 22 | Members and settings: invite, roles, month lock, leave |
 | 23, 24 | Invite: choose a role, then the single use link to share |
 | 26 | Join a group from a pasted link, with the preview before joining |
+| 31 | Business Today board: today's jobs with status, late flag, who is on each, later jobs |
+| 32, 33 | Job detail before and after the installer confirms |
+| 34 | New job: customer, title, type, when, who goes |
+| 35 | Item catalog by category, cost price visible to the owner only |
+| 36 | Notification inbox |

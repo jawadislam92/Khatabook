@@ -502,5 +502,161 @@
   "pickLockDate": "تاریخ چنیں",
   "unlock": "لاک کھولیں",
   "onlyOwner": "صرف مالک یہ بدل سکتا ہے۔",
-  "groupSettings": "گروپ سیٹنگز"
+  "groupSettings": "گروپ سیٹنگز",
+  "tabToday": "آج",
+  "tabJobs": "کام",
+  "tabLedger": "کھاتہ",
+  "tabCatalog": "فہرست",
+  "tabMyJobs": "میرے کام",
+  "newJob": "نیا کام",
+  "jobTitle": "کیا کرنا ہے؟",
+  "jobTitleHint": "مثلاً: 2 کیمرے ریکارڈ نہیں کر رہے",
+  "jobType": "کام کی قسم",
+  "jobTypeCctvInstall": "CCTV لگانا",
+  "jobTypeCctvRepair": "CCTV مرمت",
+  "jobTypeSolarInstall": "سولر لگانا",
+  "jobTypeSolarService": "سولر سروس",
+  "jobTypeOther": "دیگر",
+  "whenLabel": "کب",
+  "pickDate": "تاریخ چنیں",
+  "pickTime": "وقت چنیں",
+  "whoGoes": "کون جائے گا",
+  "nobodyAssigned": "ابھی کوئی مقرر نہیں",
+  "customer": "گاہک",
+  "pickCustomer": "گاہک چنیں",
+  "newCustomer": "نیا گاہک",
+  "addressOptional": "پتہ (اختیاری)",
+  "notesOptional": "نوٹ (اختیاری)",
+  "estimateOptional": "اندازاً رقم روپے میں (اختیاری)",
+  "jobCreated": "کام درج ہو گیا۔ ٹیم کو بتا دیا گیا ہے۔",
+  "statusScheduled": "طے شدہ",
+  "statusConfirmed": "کنفرم",
+  "statusOnTheWay": "روانہ",
+  "statusWorking": "کام جاری",
+  "statusFinished": "مکمل",
+  "statusInvoiced": "انوائس بن گئی",
+  "statusPaid": "ادا شدہ",
+  "statusCancelled": "منسوخ",
+  "confirmJob": "کنفرم، میں جاؤں گا",
+  "onMyWay": "روانہ ہوں",
+  "startWork": "کام شروع",
+  "finishJob": "کام مکمل",
+  "cancelJob": "کام منسوخ کریں",
+  "cancelJobConfirm": "یہ کام منسوخ کریں؟ ٹیم کو بتا دیا جائے گا۔",
+  "reschedule": "وقت بدلیں",
+  "callCustomer": "کال",
+  "openMap": "نقشہ",
+  "assignPeople": "لوگ مقرر کریں",
+  "history": "تاریخچہ",
+  "noJobsToday": "آج کوئی کام نہیں۔",
+  "noJobs": "ابھی کوئی کام نہیں۔ نیا کام دبا کر درج کریں۔",
+  "noMyJobs": "آپ کے ذمے کچھ نہیں۔",
+  "later": "بعد میں",
+  "earlier": "پہلے",
+  "lateJob": "دیر",
+  "unconfirmedJob": "کنفرم نہیں",
+  "confirmedBy": "کنفرم: {names}",
+  "@confirmedBy": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingFor": "انتظار: {names}",
+  "@waitingFor": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "eventCreated": "{actor} نے کام درج کیا",
+  "@eventCreated": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAssigned": "{actor} نے لوگ بدلے",
+  "@eventAssigned": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "eventConfirmed": "{actor} نے کنفرم کیا",
+  "@eventConfirmed": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "eventStatus": "{actor}: {status}",
+  "@eventStatus": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "eventRescheduled": "{actor} نے وقت بدلا",
+  "@eventRescheduled": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "finishComingSoon": "سامان اور انوائس اگلی بلڈ میں آئیں گے۔ کام مکمل درج ہو گیا۔",
+  "catalog": "فہرست",
+  "newItem": "نیا آئٹم",
+  "editItem": "آئٹم میں ترمیم",
+  "itemNameEn": "نام (انگریزی)",
+  "itemNameUr": "نام (اردو)",
+  "unit": "یونٹ",
+  "category": "قسم",
+  "salePrice": "فروخت قیمت",
+  "costPrice": "خرید قیمت (صرف مالک دیکھتا ہے)",
+  "favouriteItem": "فوری ٹائل میں دکھائیں",
+  "allowPriceEdit": "انسٹالر قیمت بدل سکتے ہیں",
+  "itemActive": "فعال",
+  "noItems": "ابھی کوئی آئٹم نہیں۔ کیمرے، کیبل، پینل اور مزدوری شامل کریں تاکہ انوائس خود بنے۔",
+  "catCamera": "کیمرے",
+  "catDvr": "DVR / NVR",
+  "catCable": "کیبل",
+  "catAccessory": "لوازمات",
+  "catSolarPanel": "سولر پینل",
+  "catInverter": "انورٹر",
+  "catBattery": "بیٹریاں",
+  "catStructure": "اسٹرکچر",
+  "catWiring": "وائرنگ",
+  "catLabour": "مزدوری",
+  "catVisit": "وزٹ چارج",
+  "catOther": "دیگر",
+  "unitPc": "عدد",
+  "unitM": "میٹر",
+  "unitSet": "سیٹ",
+  "unitHour": "گھنٹہ",
+  "unitVisit": "وزٹ",
+  "unitKg": "کلو",
+  "unitBox": "ڈبہ",
+  "notifications": "اطلاعات",
+  "noNotifications": "ابھی کچھ نہیں۔ کام کی اطلاعات اور یاد دہانیاں یہاں آئیں گی۔",
+  "pushNotReady": "اس بلڈ میں پش اطلاعات ابھی نہیں ہیں۔ اطلاعات اس فہرست میں پھر بھی آتی ہیں۔",
+  "tomorrow": "کل",
+  "jobsCount": "{count, plural, =0{کوئی کام نہیں} =1{1 کام} other{{count} کام}}",
+  "@jobsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

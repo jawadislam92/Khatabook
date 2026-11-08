@@ -19,6 +19,9 @@ class AppConfig {
   static bool get isConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
+  /// Set --dart-define=FIREBASE_ENABLED=true on builds that ship google-services.json.
+  static const pushEnabled = bool.fromEnvironment('FIREBASE_ENABLED');
+
   static const appVersion = String.fromEnvironment(
     'APP_VERSION',
     defaultValue: '0.1.0',

@@ -7,6 +7,10 @@ import '../../features/auth/auth_screen.dart';
 import '../../features/groups/activity_screen.dart';
 import '../../features/groups/join_screen.dart';
 import '../../features/groups/members_screen.dart';
+import '../../features/jobs/business_home_screen.dart';
+import '../../features/jobs/job_detail_screen.dart';
+import '../../features/jobs/new_job_screen.dart';
+import '../../features/jobs/notifications_screen.dart';
 import '../../features/ledger/add_entry_screen.dart';
 import '../../features/ledger/entry_detail_screen.dart';
 import '../../features/ledger/ledger_models.dart';
@@ -61,6 +65,30 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, st) => SpaceHomeScreen(spaceId: st.pathParameters['sid']!),
         routes: [
           GoRoute(
+            path: 'job/new',
+            builder: (_, st) =>
+                NewJobScreen(spaceId: st.pathParameters['sid']!),
+          ),
+          GoRoute(
+            path: 'job/:jid',
+            builder: (_, st) => JobDetailScreen(
+              spaceId: st.pathParameters['sid']!,
+              jobId: st.pathParameters['jid']!,
+            ),
+          ),
+          GoRoute(
+            path: 'job/new',
+            builder: (_, st) =>
+                NewJobScreen(spaceId: st.pathParameters['sid']!),
+          ),
+          GoRoute(
+            path: 'job/:jid',
+            builder: (_, st) => JobDetailScreen(
+              spaceId: st.pathParameters['sid']!,
+              jobId: st.pathParameters['jid']!,
+            ),
+          ),
+          GoRoute(
             path: 'members',
             builder: (_, st) =>
                 MembersScreen(spaceId: st.pathParameters['sid']!),
@@ -103,6 +131,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/join',
         builder: (_, st) => JoinScreen(token: st.uri.queryParameters['token']),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, _) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/business/:sid',
+        builder: (_, st) => BusinessHomeScreen(
+          spaceId: st.pathParameters['sid']!,
+          initialTab: int.tryParse(st.uri.queryParameters['tab'] ?? '') ?? 0,
+        ),
       ),
       GoRoute(
         path: '/change-pin',

@@ -404,6 +404,13 @@ class PreviewLedgerRepository implements LedgerRepository {
     e(ahmed, EntryDirection.gave, 10000, 6, 'Partly returned');
     e(tailor, EntryDirection.gave, 3500, 3, 'Advance for Eid clothes');
 
+    final ahmedF10 = p('b', 'Mr Ahmed F-10', '0300 5556667');
+    final khan = p('b', 'Khan Traders', '0321 9998887');
+    p('b', 'Mrs Rizvi', '0333 4445556');
+    e(ahmedF10, EntryDirection.gave, 4500, 1, 'Invoice INV-2026-0041 balance');
+    e(khan, EntryDirection.gave, 185000, 15, 'Inverter supplied on credit');
+    e(khan, EntryDirection.got, 100000, 7, 'Part payment, bank transfer');
+
     _reminders.add(
       Reminder(
         id: _uuid.v4(),

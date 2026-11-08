@@ -502,5 +502,161 @@
   "pickLockDate": "Pick a date",
   "unlock": "Unlock",
   "onlyOwner": "Only the owner can change this.",
-  "groupSettings": "Group settings"
+  "groupSettings": "Group settings",
+  "tabToday": "Today",
+  "tabJobs": "Jobs",
+  "tabLedger": "Ledger",
+  "tabCatalog": "Catalog",
+  "tabMyJobs": "My jobs",
+  "newJob": "New job",
+  "jobTitle": "What needs doing?",
+  "jobTitleHint": "For example: 2 cameras not recording",
+  "jobType": "Type of job",
+  "jobTypeCctvInstall": "CCTV install",
+  "jobTypeCctvRepair": "CCTV repair",
+  "jobTypeSolarInstall": "Solar install",
+  "jobTypeSolarService": "Solar service",
+  "jobTypeOther": "Other",
+  "whenLabel": "When",
+  "pickDate": "Pick date",
+  "pickTime": "Pick time",
+  "whoGoes": "Who goes",
+  "nobodyAssigned": "Nobody assigned yet",
+  "customer": "Customer",
+  "pickCustomer": "Pick a customer",
+  "newCustomer": "New customer",
+  "addressOptional": "Address (optional)",
+  "notesOptional": "Notes (optional)",
+  "estimateOptional": "Estimate in rupees (optional)",
+  "jobCreated": "Job created. The team has been told.",
+  "statusScheduled": "Scheduled",
+  "statusConfirmed": "Confirmed",
+  "statusOnTheWay": "On the way",
+  "statusWorking": "Working",
+  "statusFinished": "Finished",
+  "statusInvoiced": "Invoiced",
+  "statusPaid": "Paid",
+  "statusCancelled": "Cancelled",
+  "confirmJob": "Confirm, I will go",
+  "onMyWay": "On my way",
+  "startWork": "Start work",
+  "finishJob": "Finish job",
+  "cancelJob": "Cancel job",
+  "cancelJobConfirm": "Cancel this job? The team will be told.",
+  "reschedule": "Change time",
+  "callCustomer": "Call",
+  "openMap": "Map",
+  "assignPeople": "Assign people",
+  "history": "History",
+  "noJobsToday": "No jobs today.",
+  "noJobs": "No jobs yet. Tap New job to book one.",
+  "noMyJobs": "Nothing assigned to you.",
+  "later": "Later",
+  "earlier": "Earlier",
+  "lateJob": "Late",
+  "unconfirmedJob": "Not confirmed",
+  "confirmedBy": "Confirmed: {names}",
+  "@confirmedBy": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingFor": "Waiting for: {names}",
+  "@waitingFor": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "eventCreated": "{actor} created the job",
+  "@eventCreated": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "eventAssigned": "{actor} changed who goes",
+  "@eventAssigned": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "eventConfirmed": "{actor} confirmed",
+  "@eventConfirmed": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "eventStatus": "{actor}: {status}",
+  "@eventStatus": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "eventRescheduled": "{actor} changed the time",
+  "@eventRescheduled": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      }
+    }
+  },
+  "finishComingSoon": "Materials and the invoice come in the next build. The job is marked finished.",
+  "catalog": "Catalog",
+  "newItem": "New item",
+  "editItem": "Edit item",
+  "itemNameEn": "Name (English)",
+  "itemNameUr": "Name (Urdu)",
+  "unit": "Unit",
+  "category": "Category",
+  "salePrice": "Sale price",
+  "costPrice": "Cost price (only owner sees)",
+  "favouriteItem": "Show as quick tile",
+  "allowPriceEdit": "Installers may change the price",
+  "itemActive": "Active",
+  "noItems": "No items yet. Add cameras, cable, panels and labour so invoices fill themselves.",
+  "catCamera": "Cameras",
+  "catDvr": "DVR / NVR",
+  "catCable": "Cable",
+  "catAccessory": "Accessories",
+  "catSolarPanel": "Solar panels",
+  "catInverter": "Inverters",
+  "catBattery": "Batteries",
+  "catStructure": "Structure",
+  "catWiring": "Wiring",
+  "catLabour": "Labour",
+  "catVisit": "Visit charge",
+  "catOther": "Other",
+  "unitPc": "piece",
+  "unitM": "metre",
+  "unitSet": "set",
+  "unitHour": "hour",
+  "unitVisit": "visit",
+  "unitKg": "kg",
+  "unitBox": "box",
+  "notifications": "Notifications",
+  "noNotifications": "Nothing yet. Job alerts and reminders show up here.",
+  "pushNotReady": "Push alerts are not set up on this build yet. Alerts still appear in this list.",
+  "tomorrow": "Tomorrow",
+  "jobsCount": "{count, plural, =0{No jobs} =1{1 job} other{{count} jobs}}",
+  "@jobsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -18,8 +18,13 @@ import 'share_actions.dart';
 
 /// Home of one space: totals, the two big actions, reminders, and people.
 class SpaceHomeScreen extends ConsumerStatefulWidget {
-  const SpaceHomeScreen({super.key, required this.spaceId});
+  const SpaceHomeScreen({
+    super.key,
+    required this.spaceId,
+    this.embedded = false,
+  });
   final String spaceId;
+  final bool embedded;
 
   @override
   ConsumerState<SpaceHomeScreen> createState() => _SpaceHomeScreenState();
@@ -64,7 +69,8 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(spaceName),
+        title: Text(widget.embedded ? l.tabLedger : spaceName),
+        automaticallyImplyLeading: !widget.embedded,
         actions: [
           if (space != null && space.kind == SpaceKind.group) ...[
             IconButton(

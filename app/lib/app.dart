@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/settings/app_settings.dart';
 import 'core/theme/app_theme.dart';
+import 'core/push/push_service.dart';
 import 'core/theme/tokens.dart';
+import 'features/auth/auth_repository.dart';
 import 'features/groups/groups_models.dart';
 import 'l10n/app_localizations.dart';
 
@@ -54,6 +56,9 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
   Widget build(BuildContext context) {
     final settings = ref.watch(appSettingsProvider);
     final router = ref.watch(routerProvider);
+    ref.listen(currentUserProvider, (_, next) {
+      if (next.value != null) ref.read(pushServiceProvider).start();
+    });
     final locale = settings.locale;
 
     return MaterialApp.router(

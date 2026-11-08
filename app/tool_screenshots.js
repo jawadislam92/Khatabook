@@ -137,13 +137,28 @@ async function typeInto(page, label, value) {
   const act = await page.evaluate(() => window.__act);
   if (act) { await page.mouse.click(act.x, act.y); await page.waitForTimeout(1000); await shot(page, '25-activity'); await page.goBack(); await page.waitForTimeout(600); }
   await backUntil(page, 'Ahmed CCTV');
-  await tapText(page, 'Join a group');
-  await page.waitForTimeout(800);
-  await tapText(page, 'Invite link or code');
-  await page.keyboard.type('https://duebook.sparkingasia.com/join/a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90');
-  await tapText(page, 'Check invite');
+  await tapText(page, 'Ahmed CCTV');
+  await page.waitForTimeout(1500);
+  await shot(page, '31-business-today');
+  await tapText(page, 'Khan Traders');
   await page.waitForTimeout(1000);
-  await shot(page, '26-join');
+  await shot(page, '32-job-detail');
+  await tapText(page, 'Confirm, I will go');
+  await page.waitForTimeout(800);
+  await shot(page, '33-job-confirmed');
+  await page.goBack(); await page.waitForTimeout(800);
+  await tapText(page, 'New job');
+  await page.waitForTimeout(1000);
+  await shot(page, '34-new-job');
+  await page.goBack(); await page.waitForTimeout(800);
+  await tapText(page, 'Catalog');
+  await page.waitForTimeout(1000);
+  await shot(page, '35-catalog');
+  await tapText(page, 'Today');
+  await page.waitForTimeout(600);
+  await tapText(page, 'Notifications');
+  await page.waitForTimeout(1000);
+  await shot(page, '36-notifications');
 
   await browser.close();
 })().catch(e => { console.error(e); process.exit(1); });

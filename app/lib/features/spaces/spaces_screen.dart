@@ -52,6 +52,8 @@ class SpacesScreen extends ConsumerWidget {
               date: today,
               onSettings: () => context.push('/settings'),
               settingsLabel: l.settings,
+              onNotifications: () => context.push('/notifications'),
+              notificationsLabel: l.notifications,
             ),
           ),
           SliverPadding(
@@ -195,10 +197,14 @@ class _Hero extends StatelessWidget {
     required this.date,
     required this.onSettings,
     required this.settingsLabel,
+    required this.onNotifications,
+    required this.notificationsLabel,
   });
   final String greeting;
   final String date;
   final VoidCallback onSettings;
+  final VoidCallback onNotifications;
+  final String notificationsLabel;
   final String settingsLabel;
 
   @override
@@ -356,7 +362,11 @@ class _SpaceTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(Tokens.radius),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.push('/space/${space.id}'),
+          onTap: () => context.push(
+            space.businessEnabled
+                ? '/business/${space.id}'
+                : '/space/${space.id}',
+          ),
           child: Row(
             children: [
               Container(width: 8, height: 96, color: hue),
