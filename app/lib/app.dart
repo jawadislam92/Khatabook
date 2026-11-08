@@ -9,7 +9,7 @@ import 'core/theme/tokens.dart';
 import 'l10n/app_localizations.dart';
 
 class DuebookApp extends ConsumerWidget {
-  const KhatabookApp({super.key});
+  const DuebookApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
