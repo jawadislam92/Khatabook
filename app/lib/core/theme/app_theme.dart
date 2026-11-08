@@ -19,10 +19,12 @@ class AppTheme {
 
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: dark ? Tokens.primaryDark : Tokens.primary,
+      primary: dark ? Tokens.primaryBright : Tokens.primary,
       onPrimary: dark ? Tokens.backgroundDark : Colors.white,
-      secondary: Tokens.ink,
+      secondary: Tokens.saffronDeep,
       onSecondary: Colors.white,
+      tertiary: Tokens.indigo,
+      onTertiary: Colors.white,
       error: dark ? Tokens.giveDark : Tokens.give,
       onError: Colors.white,
       surface: dark ? Tokens.paperDark : Tokens.paper,
@@ -119,11 +121,28 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: scheme.surface,
         elevation: 0,
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Tokens.radius),
           side: BorderSide(color: scheme.outline),
         ),
         margin: EdgeInsets.zero,
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: Tokens.saffron,
+        foregroundColor: Tokens.text,
+        extendedTextStyle: buttonText.copyWith(color: Tokens.text),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Tokens.radius),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? Colors.white : null,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? scheme.primary : null,
+        ),
       ),
       listTileTheme: ListTileThemeData(
         minVerticalPadding: simpleMode ? Tokens.s4 : Tokens.s3,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/widgets/big_button.dart';
+import '../../core/widgets/brand_header.dart';
 import '../../l10n/app_localizations.dart';
 import 'auth_repository.dart';
 
@@ -118,139 +119,153 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     final live = ref.watch(authRepositoryProvider).isLive;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.appTitle)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(Tokens.s4),
-          child: Form(
-            key: _form,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!live) _PreviewBanner(text: l.demoBanner),
-                Text(
-                  signUp ? l.createAccount : l.signIn,
-                  style: text.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: Tokens.s5),
-                if (signUp) ...[
-                  TextFormField(
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.name],
-                    decoration: InputDecoration(labelText: l.yourName),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? l.errorNameRequired
-                        : null,
-                  ),
-                  const SizedBox(height: Tokens.s3),
-                ],
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  autocorrect: false,
-                  decoration: InputDecoration(labelText: l.email),
-                  validator: (v) => _emailRe.hasMatch((v ?? '').trim())
-                      ? null
-                      : l.errorInvalidEmail,
-                ),
-                const SizedBox(height: Tokens.s3),
-                TextFormField(
-                  controller: _password,
-                  obscureText: !_showPassword,
-                  autofillHints: [
-                    signUp ? AutofillHints.newPassword : AutofillHints.password,
-                  ],
-                  decoration: InputDecoration(
-                    labelText: l.password,
-                    helperText: signUp ? l.passwordHint : null,
-                    helperMaxLines: 3,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _showPassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () =>
-                          setState(() => _showPassword = !_showPassword),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (!signUp) {
-                      return (v == null || v.isEmpty) ? l.errorSignIn : null;
-                    }
-                    return passwordIsStrong(v ?? '')
-                        ? null
-                        : l.errorPasswordWeak;
-                  },
-                  onFieldSubmitted: (_) => _submit(),
-                ),
-                if (!signUp)
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: TextButton(
-                      onPressed: _busy ? null : _forgot,
-                      child: Text(l.forgotPassword),
-                    ),
-                  ),
-                if (_error != null) ...[
-                  const SizedBox(height: Tokens.s3),
-                  _Notice(
-                    text: _error!,
-                    color: scheme.error,
-                    icon: Icons.error_outline,
-                  ),
-                ],
-                if (_info != null) ...[
-                  const SizedBox(height: Tokens.s3),
-                  _Notice(
-                    text: _info!,
-                    color: scheme.primary,
-                    icon: Icons.mark_email_read_outlined,
-                  ),
-                ],
-                const SizedBox(height: Tokens.s5),
-                BigButton(
-                  label: signUp ? l.createAccount : l.signIn,
-                  onPressed: _submit,
-                  busy: _busy,
-                ),
-                const SizedBox(height: Tokens.s4),
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Tokens.s3,
-                      ),
-                      child: Text(l.orDivider, style: text.bodyMedium),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: Tokens.s4),
-                BigButton(
-                  label: l.continueWithGoogle,
-                  icon: Icons.g_mobiledata,
-                  outlined: true,
-                  onPressed: _busy ? null : _google,
-                ),
-                const SizedBox(height: Tokens.s4),
-                TextButton(
-                  onPressed: _busy
-                      ? null
-                      : () => setState(() {
-                          _mode = signUp ? _Mode.signIn : _Mode.signUp;
-                          _error = null;
-                          _info = null;
-                        }),
-                  child: Text(signUp ? l.haveAccount : l.noAccountYet),
-                ),
-              ],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            BrandHeader(
+              title: l.appTitle,
+              subtitle: signUp ? l.createAccount : l.signIn,
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.all(Tokens.s4),
+              child: Form(
+                key: _form,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!live) _PreviewBanner(text: l.demoBanner),
+                    Text(
+                      signUp ? l.createAccount : l.signIn,
+                      style: text.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: Tokens.s5),
+                    if (signUp) ...[
+                      TextFormField(
+                        controller: _name,
+                        textCapitalization: TextCapitalization.words,
+                        autofillHints: const [AutofillHints.name],
+                        decoration: InputDecoration(labelText: l.yourName),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? l.errorNameRequired
+                            : null,
+                      ),
+                      const SizedBox(height: Tokens.s3),
+                    ],
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
+                      autocorrect: false,
+                      decoration: InputDecoration(labelText: l.email),
+                      validator: (v) => _emailRe.hasMatch((v ?? '').trim())
+                          ? null
+                          : l.errorInvalidEmail,
+                    ),
+                    const SizedBox(height: Tokens.s3),
+                    TextFormField(
+                      controller: _password,
+                      obscureText: !_showPassword,
+                      autofillHints: [
+                        signUp
+                            ? AutofillHints.newPassword
+                            : AutofillHints.password,
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l.password,
+                        helperText: signUp ? l.passwordHint : null,
+                        helperMaxLines: 3,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () =>
+                              setState(() => _showPassword = !_showPassword),
+                        ),
+                      ),
+                      validator: (v) {
+                        if (!signUp) {
+                          return (v == null || v.isEmpty)
+                              ? l.errorSignIn
+                              : null;
+                        }
+                        return passwordIsStrong(v ?? '')
+                            ? null
+                            : l.errorPasswordWeak;
+                      },
+                      onFieldSubmitted: (_) => _submit(),
+                    ),
+                    if (!signUp)
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: TextButton(
+                          onPressed: _busy ? null : _forgot,
+                          child: Text(l.forgotPassword),
+                        ),
+                      ),
+                    if (_error != null) ...[
+                      const SizedBox(height: Tokens.s3),
+                      _Notice(
+                        text: _error!,
+                        color: scheme.error,
+                        icon: Icons.error_outline,
+                      ),
+                    ],
+                    if (_info != null) ...[
+                      const SizedBox(height: Tokens.s3),
+                      _Notice(
+                        text: _info!,
+                        color: scheme.primary,
+                        icon: Icons.mark_email_read_outlined,
+                      ),
+                    ],
+                    const SizedBox(height: Tokens.s5),
+                    BigButton(
+                      label: signUp ? l.createAccount : l.signIn,
+                      onPressed: _submit,
+                      busy: _busy,
+                    ),
+                    const SizedBox(height: Tokens.s4),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: Tokens.s3,
+                          ),
+                          child: Text(l.orDivider, style: text.bodyMedium),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: Tokens.s4),
+                    BigButton(
+                      label: l.continueWithGoogle,
+                      icon: Icons.g_mobiledata,
+                      outlined: true,
+                      onPressed: _busy ? null : _google,
+                    ),
+                    const SizedBox(height: Tokens.s4),
+                    TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () => setState(() {
+                              _mode = signUp ? _Mode.signIn : _Mode.signUp;
+                              _error = null;
+                              _info = null;
+                            }),
+                      child: Text(signUp ? l.haveAccount : l.noAccountYet),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

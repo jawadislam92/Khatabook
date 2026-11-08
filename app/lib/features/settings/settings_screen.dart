@@ -22,21 +22,32 @@ class SettingsScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
-    Widget section(String title) => Padding(
+    Widget section(String title, IconData icon, Color color) => Padding(
       padding: const EdgeInsets.fromLTRB(0, Tokens.s5, 0, Tokens.s2),
-      child: Text(
-        title.toUpperCase(),
-        style: text.labelLarge?.copyWith(
-          color: scheme.onSurfaceVariant,
-          letterSpacing: 1,
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 18, color: Colors.white),
+          ),
+          const SizedBox(width: Tokens.s3),
+          Text(
+            title,
+            style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ],
       ),
     );
 
     return ScreenScaffold(
       title: l.settings,
       children: [
-        section(l.settingsDisplay),
+        section(l.settingsDisplay, Icons.palette_rounded, Tokens.violet),
         Card(
           child: Column(
             children: [
@@ -61,7 +72,7 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        section(l.settingsSecurity),
+        section(l.settingsSecurity, Icons.shield_rounded, Tokens.primary),
         Card(
           child: Column(
             children: [
@@ -103,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        section(l.settingsAccount),
+        section(l.settingsAccount, Icons.person_rounded, Tokens.indigo),
         Card(
           child: ListTile(
             leading: Icon(Icons.logout, color: scheme.error),
@@ -112,7 +123,7 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _signOut(context, ref),
           ),
         ),
-        section(l.settingsAbout),
+        section(l.settingsAbout, Icons.info_rounded, Tokens.saffronDeep),
         Text(
           l.version(AppConfig.appVersion),
           style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),

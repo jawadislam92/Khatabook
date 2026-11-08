@@ -8,6 +8,7 @@ import '../../core/security/app_lock.dart';
 import '../../core/security/pin_store.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
+import '../../core/widgets/brand_header.dart';
 import '../../core/widgets/number_pad.dart';
 import '../../core/widgets/pin_dots.dart';
 import '../../l10n/app_localizations.dart';
@@ -146,64 +147,64 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final message = _lockLeft > 0 ? l.lockedOut(_lockLeft) : _error;
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(Tokens.s4),
-          child: Column(
-            children: [
-              const Spacer(),
-              Icon(Icons.lock_outline, size: 48, color: scheme.primary),
-              const SizedBox(height: Tokens.s3),
-              Text(
-                l.enterPin,
-                style: text.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: Tokens.s5),
-              PinDots(filled: _pin.length, error: message != null),
-              const SizedBox(height: Tokens.s3),
-              SizedBox(
-                height: 56,
-                child: message == null
-                    ? null
-                    : Text(
-                        message,
-                        textAlign: TextAlign.center,
-                        style: text.bodyLarge?.copyWith(
-                          color: scheme.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-              const Spacer(),
-              NumberPad(
-                onDigit: _digit,
-                onBackspace: () {
-                  if (_pin.isEmpty) return;
-                  setState(() => _pin = _pin.substring(0, _pin.length - 1));
-                },
-                trailing: biometric
-                    ? Semantics(
-                        button: true,
-                        label: l.useFingerprint,
-                        child: InkResponse(
-                          onTap: _biometric,
-                          radius: 40,
-                          child: Icon(
-                            Icons.fingerprint,
-                            size: 36,
-                            color: scheme.primary,
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(height: Tokens.s3),
-              TextButton(onPressed: _forgot, child: Text(l.forgotPin)),
-            ],
+      body: Column(
+        children: [
+          BrandHeader(
+            title: l.appTitle,
+            subtitle: l.enterPin,
+            icon: Icons.lock_rounded,
           ),
-        ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(Tokens.s4),
+              child: Column(
+                children: [
+                  const Spacer(),
+                  PinDots(filled: _pin.length, error: message != null),
+                  const SizedBox(height: Tokens.s3),
+                  SizedBox(
+                    height: 56,
+                    child: message == null
+                        ? null
+                        : Text(
+                            message,
+                            textAlign: TextAlign.center,
+                            style: text.bodyLarge?.copyWith(
+                              color: scheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                  const Spacer(),
+                  NumberPad(
+                    onDigit: _digit,
+                    onBackspace: () {
+                      if (_pin.isEmpty) return;
+                      setState(() => _pin = _pin.substring(0, _pin.length - 1));
+                    },
+                    trailing: biometric
+                        ? Semantics(
+                            button: true,
+                            label: l.useFingerprint,
+                            child: InkResponse(
+                              onTap: _biometric,
+                              radius: 40,
+                              child: Icon(
+                                Icons.fingerprint,
+                                size: 36,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(height: Tokens.s3),
+                  TextButton(onPressed: _forgot, child: Text(l.forgotPin)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

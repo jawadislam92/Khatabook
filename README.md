@@ -13,6 +13,7 @@ One mobile app with two uses:
 | [docs/TECHNICAL.md](docs/TECHNICAL.md) | Tech stack, architecture, database design, security plan, notification engine, offline support, testing, costs |
 | [docs/SETUP_CHECKLIST.md](docs/SETUP_CHECKLIST.md) | Accounts, secrets and content the owner provides, and where each goes |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Decisions taken so far and placeholders still waiting on the owner |
+| [docs/STEP_BY_STEP.md](docs/STEP_BY_STEP.md) | The owner's steps in order, with exactly what to send and where secrets go |
 
 ## In one picture
 

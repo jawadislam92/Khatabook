@@ -6,6 +6,7 @@ import '../../core/security/app_lock.dart';
 import '../../core/security/pin_store.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
+import '../../core/widgets/brand_header.dart';
 import '../../core/widgets/number_pad.dart';
 import '../../core/widgets/pin_dots.dart';
 import '../../l10n/app_localizations.dart';
@@ -110,45 +111,48 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_confirming ? l.confirmPinTitle : l.setPinTitle),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(Tokens.s4),
-          child: Column(
-            children: [
-              Text(
-                _confirming ? l.confirmPinBody : l.setPinBody,
-                style: text.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: Tokens.s6),
-              PinDots(filled: _current.length, error: _error != null),
-              const SizedBox(height: Tokens.s3),
-              SizedBox(
-                height: 48,
-                child: _error == null
-                    ? null
-                    : Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: text.bodyLarge?.copyWith(
-                          color: scheme.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-              const Spacer(),
-              NumberPad(onDigit: _digit, onBackspace: _back),
-              const SizedBox(height: Tokens.s4),
-              FilledButton(
-                onPressed: _current.length >= 4 ? _next : null,
-                child: Text(l.continueLabel),
-              ),
-            ],
+      appBar: widget.onDone == null ? null : AppBar(),
+      body: Column(
+        children: [
+          BrandHeader(
+            title: _confirming ? l.confirmPinTitle : l.setPinTitle,
+            subtitle: _confirming ? l.confirmPinBody : l.setPinBody,
+            gradient: Tokens.violetGradient,
+            icon: Icons.pin_rounded,
           ),
-        ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(Tokens.s4),
+              child: Column(
+                children: [
+                  const SizedBox(height: Tokens.s5),
+                  PinDots(filled: _current.length, error: _error != null),
+                  const SizedBox(height: Tokens.s3),
+                  SizedBox(
+                    height: 48,
+                    child: _error == null
+                        ? null
+                        : Text(
+                            _error!,
+                            textAlign: TextAlign.center,
+                            style: text.bodyLarge?.copyWith(
+                              color: scheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                  const Spacer(),
+                  NumberPad(onDigit: _digit, onBackspace: _back),
+                  const SizedBox(height: Tokens.s4),
+                  FilledButton(
+                    onPressed: _current.length >= 4 ? _next : null,
+                    child: Text(l.continueLabel),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

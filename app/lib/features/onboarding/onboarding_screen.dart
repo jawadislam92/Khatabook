@@ -42,6 +42,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: Tokens.s5),
               ChoiceCard(
                 title: l.languageEnglish,
+                icon: Icons.translate,
+                color: Tokens.indigo,
                 selected: settings.languageCode == 'en',
                 onTap: () => notifier.setLanguage('en'),
                 titleStyle: text.headlineSmall?.copyWith(
@@ -52,6 +54,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: Tokens.s3),
               ChoiceCard(
                 title: l.languageUrdu,
+                icon: Icons.translate,
+                color: Tokens.primary,
                 selected: settings.languageCode == 'ur',
                 onTap: () => notifier.setLanguage('ur'),
                 titleStyle: text.headlineSmall?.copyWith(
@@ -77,6 +81,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: Tokens.s5),
               ChoiceCard(
                 icon: Icons.text_increase,
+                color: Tokens.saffronDeep,
                 title: l.modeSimpleTitle,
                 subtitle: l.modeSimpleHint,
                 selected: settings.simpleMode,
@@ -85,6 +90,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: Tokens.s3),
               ChoiceCard(
                 icon: Icons.tune,
+                color: Tokens.violet,
                 title: l.modeStandardTitle,
                 subtitle: l.modeStandardHint,
                 selected: !settings.simpleMode,
@@ -95,7 +101,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.appTitle),
+        title: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                gradient: Tokens.heroGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: Tokens.s3),
+            Text(l.appTitle),
+          ],
+        ),
         leading: _step == 0
             ? null
             : IconButton(
@@ -116,6 +140,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: content,
                   ),
                 ),
+              ),
+              const SizedBox(height: Tokens.s3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < 2; i++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: i == _step ? 28 : 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: i == _step
+                            ? Tokens.saffron
+                            : Theme.of(context).colorScheme.outline,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: Tokens.s3),
               BigButton(

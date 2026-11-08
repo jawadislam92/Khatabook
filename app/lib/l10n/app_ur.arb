@@ -97,5 +97,7 @@
   "youWillGet": "آپ کو ملیں گے",
   "youWillGive": "آپ نے دینے ہیں",
   "rupees": "{amount} روپے",
-  "@rupees": {"placeholders": {"amount": {"type": "String"}}}
+  "@rupees": {"placeholders": {"amount": {"type": "String"}}},
+  "greeting": "السلام علیکم، {name}",
+  "@greeting": {"placeholders": {"name": {"type": "String"}}}
 }
