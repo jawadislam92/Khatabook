@@ -1,6 +1,8 @@
 // Runs every minute (pg_cron). Sends every due alert as a push to each
 // recipient's devices and writes the in app inbox row. Idempotent: a row is
 // only marked sent after delivery, and retried up to five times on error.
+// Deployed with verify_jwt off; the CRON_SECRET header is the gate, and the
+// function refuses everything until that secret is configured.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { sendPushes, type Push } from "../_shared/fcm.ts";
 
@@ -63,7 +65,7 @@ async function compose(row: Row, lang: string): Promise<{ title: string; body: s
 }
 
 Deno.serve(async (req) => {
-  if (CRON_SECRET && req.headers.get("x-cron-secret") !== CRON_SECRET) {
+  if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) {
     return new Response("forbidden", { status: 403 });
   }
   const { data: due, error } = await supabase

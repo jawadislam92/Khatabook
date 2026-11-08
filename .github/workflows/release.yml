@@ -47,7 +47,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY_PROD }}
         run: |
-          COMMON="--release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ steps.ver.outputs.code }} --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --obfuscate --split-debug-info=build/symbols"
+          FIREBASE=false; [ -f android/app/google-services.json ] && FIREBASE=true
+          COMMON="--release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ steps.ver.outputs.code }} --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY --dart-define=FIREBASE_ENABLED=$FIREBASE --obfuscate --split-debug-info=build/symbols"
           flutter build apk $COMMON
           flutter build appbundle $COMMON
       - name: Remove key material
