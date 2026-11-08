@@ -1,0 +1,26 @@
+# Secrets and local config. Never commit these.
+*.jks
+*.keystore
+key.properties
+google-services.json
+GoogleService-Info.plist
+.env
+.env.*
+supabase/.temp/
+supabase/.branches/
+
+# Build output
+app/build/
+app/.dart_tool/
+app/.flutter-plugins*
+app/.packages
+app/coverage/
+app/android/.gradle/
+app/android/local.properties
+app/ios/Pods/
+app/ios/.symlinks/
+app/*.iml
+.idea/
+*.log
+app/lib/l10n/app_localizations*.dart
+app/.flutter-plugins-dependencies
