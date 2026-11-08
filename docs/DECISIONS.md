@@ -27,3 +27,14 @@ These are set to working defaults so the build can proceed. Changing them is che
 | Business name, logo, address, payment details | Sample values in seed data | Before phase 4 |
 | Item catalog | Sample CCTV and solar items in seed data | Before phase 4 |
 | Who sees cost prices | Owner only | Any time, it is a space setting |
+
+## Infrastructure created on 8 November 2026
+
+| Item | Value |
+|---|---|
+| Supabase organisation | sparkingasia |
+| Development project | `khatabook-dev`, ref `jepcsftdjejjzhfjnavy`, Mumbai, URL https://jepcsftdjejjzhfjnavy.supabase.co |
+| Production project | `khatabook-prod`, ref `ohrnkvzemgfrxcuknamh`, Mumbai, URL https://ohrnkvzemgfrxcuknamh.supabase.co |
+| Foundation migration | Applied to dev on creation day. Prod gets it from the pipeline on the first release tag. |
+
+Publishable keys are in `app/.env.example`. They are public by design; row level security does the protecting.

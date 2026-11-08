@@ -5,6 +5,7 @@ key.properties
 google-services.json
 GoogleService-Info.plist
 .env
+!app/.env.example
 .env.*
 supabase/.temp/
 supabase/.branches/
