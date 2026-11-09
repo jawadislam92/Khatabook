@@ -59,6 +59,27 @@ async function compose(row: Row, lang: string): Promise<{ title: string; body: s
       return { title: ur ? "وقت بدل گیا" : "Job moved", body: `${customer}: ${p.title}, ${when}`, link };
     case "job_cancelled":
       return { title: ur ? "کام منسوخ" : "Job cancelled", body: `${customer}: ${p.title}`, link };
+    case "invoice_issued": {
+      const total = Number(p.total_paisa ?? 0) / 100;
+      const bal = Number(p.balance_paisa ?? 0) / 100;
+      const ilink = `/space/${row.space_id}/invoice/${p.invoice_id}`;
+      return {
+        title: ur ? `انوائس ${p.number}` : `Invoice ${p.number}`,
+        body: ur ? `${customer}: کل ${total.toLocaleString("en-PK")} روپے، باقی ${bal.toLocaleString("en-PK")} روپے`
+                 : `${customer}: total Rs ${total.toLocaleString("en-PK")}, balance due Rs ${bal.toLocaleString("en-PK")}`,
+        link: ilink,
+      };
+    }
+    case "payment_received": {
+      const amt = Number(p.amount_paisa ?? 0) / 100;
+      const ilink = `/space/${row.space_id}/invoice/${p.invoice_id}`;
+      return {
+        title: ur ? "ادائیگی موصول" : "Payment received",
+        body: ur ? `${customer}: ${amt.toLocaleString("en-PK")} روپے (${p.method}) برائے ${p.number}`
+                 : `${customer}: Rs ${amt.toLocaleString("en-PK")} by ${p.method} for ${p.number}`,
+        link: ilink,
+      };
+    }
     default:
       return { title: "Duebook", body: String(p.title ?? ""), link };
   }
