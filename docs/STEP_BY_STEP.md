@@ -93,9 +93,19 @@ It asks for a password and some names. Then:
 2. Send me the developer name you chose and a support email.
 3. I will give you the store text, screenshots and the privacy policy page to host on your existing hosting.
 
-## Step 9. Optional: a subdomain for invoice links
+## Step 9. The web address: duebook.sparkingasia.com (15 minutes, free)
 
-Pick a subdomain such as `app.yourdomain.com` and tell me who can add one DNS record when we get there.
+The app already uses this address for invite links, and Google needs a home page and a privacy policy on it before Google sign in can be published. The pages live in `docs/web/` in the repository; Cloudflare Pages serves them for free and redeploys on every push.
+
+1. Go to dash.cloudflare.com and sign in or create a free account.
+2. Left menu **Workers & Pages**, **Create**, **Pages** tab, **Connect to Git**. Authorise GitHub and pick the repository `jawadislam92/Khatabook`.
+3. Project name `duebook`. Production branch: the branch I push to (currently `claude/khatabook-field-service-plan-7dg24c`; `main` once we merge). Framework preset **None**. Build command: leave empty. Build output directory: `docs/web`. Press **Save and Deploy**. After a minute the site is live at `duebook.pages.dev`.
+4. Open the project, **Custom domains**, **Set up a custom domain**, enter `duebook.sparkingasia.com`.
+   - If the DNS of sparkingasia.com is already on Cloudflare, it adds the record for you.
+   - If not, it shows a CNAME to add wherever your DNS lives: name `duebook`, target `duebook.pages.dev`. Add it and come back; the status turns to **Active** within a few minutes.
+5. Check `https://duebook.sparkingasia.com` and `https://duebook.sparkingasia.com/privacy` open on your phone.
+
+Later the same address serves the Android app link file for invites and the public invoice link, with no further setup on your side.
 
 ## Step 10. Optional: Google sign in (15 minutes, free)
 
@@ -105,7 +115,7 @@ Email and password already work. This adds the **Continue with Google** button. 
 
 1. Go to console.cloud.google.com and pick the project Firebase made, **duebook-1acb5** (project picker at the top).
 2. Left menu, **APIs and Services**, **OAuth consent screen** (Google now calls this page **Google Auth Platform**, **Branding**). App name `Duebook`, user support email and developer contact email: yours. Save.
-3. Google will not let you press **Publish app** until the Branding page also has an application home page link and a privacy policy link on a domain you own. Two ready pages are in `docs/web/` (`index.html` and `privacy.html`). Put them on your hosting, for example `https://sparkingasia.com/duebook/` and `https://sparkingasia.com/duebook/privacy.html`, then on Branding press **Add domain** and enter `sparkingasia.com`, paste the two links, save, and on **Audience** press **Publish app**. User type stays **External**. Basic sign in only asks for name and email, so no Google review is needed.
+3. Google will not let you press **Publish app** until the Branding page also has an application home page link and a privacy policy link on a domain you own. Two ready pages are in `docs/web/` (`index.html` and `privacy.html`). Step 9 puts them at `https://duebook.sparkingasia.com` and `https://duebook.sparkingasia.com/privacy`. Then on Branding press **Add domain** and enter `sparkingasia.com`, paste the two links, save, and on **Audience** press **Publish app**. User type stays **External**. Basic sign in only asks for name and email, so no Google review is needed.
    Until the pages are up, the app can stay in **Testing**: on Audience press **Add users** and type the Gmail addresses of the people who should sign in with Google (yours first). Everyone else can still use email and password.
 4. **Credentials**, **Create credentials**, **OAuth client ID**. Application type **Web application** (yes, web, even though it is an Android app: the browser does the sign in). Name `Duebook Supabase`.
 5. Under **Authorised redirect URIs** add both lines, exactly:
