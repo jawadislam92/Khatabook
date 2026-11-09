@@ -105,7 +105,8 @@ Email and password already work. This adds the **Continue with Google** button. 
 
 1. Go to console.cloud.google.com and pick the project Firebase made, **duebook-1acb5** (project picker at the top).
 2. Left menu, **APIs and Services**, **OAuth consent screen** (Google now calls this page **Google Auth Platform**, **Branding**). App name `Duebook`, user support email and developer contact email: yours. Save.
-3. On **Audience**, set the app to **External** and press **Publish app**. If it stays in Testing, only people typed into the test user list can sign in, which is not what you want for the team. Basic sign in only asks for name and email, so no Google review is needed.
+3. Google will not let you press **Publish app** until the Branding page also has an application home page link and a privacy policy link on a domain you own. Two ready pages are in `docs/web/` (`index.html` and `privacy.html`). Put them on your hosting, for example `https://sparkingasia.com/duebook/` and `https://sparkingasia.com/duebook/privacy.html`, then on Branding press **Add domain** and enter `sparkingasia.com`, paste the two links, save, and on **Audience** press **Publish app**. User type stays **External**. Basic sign in only asks for name and email, so no Google review is needed.
+   Until the pages are up, the app can stay in **Testing**: on Audience press **Add users** and type the Gmail addresses of the people who should sign in with Google (yours first). Everyone else can still use email and password.
 4. **Credentials**, **Create credentials**, **OAuth client ID**. Application type **Web application** (yes, web, even though it is an Android app: the browser does the sign in). Name `Duebook Supabase`.
 5. Under **Authorised redirect URIs** add both lines, exactly:
    - `https://jepcsftdjejjzhfjnavy.supabase.co/auth/v1/callback`
