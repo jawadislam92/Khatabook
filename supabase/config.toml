@@ -24,3 +24,12 @@ secure_password_change = true
 email_sent = 4
 sign_in_sign_ups = 30
 token_verifications = 30
+
+# Both functions are called by pg_cron with the x-cron-secret header and no
+# user token, so the gateway must not demand a JWT. The functions refuse
+# every request that lacks the secret.
+[functions.run_due_notifications]
+verify_jwt = false
+
+[functions.backup_to_s3]
+verify_jwt = false

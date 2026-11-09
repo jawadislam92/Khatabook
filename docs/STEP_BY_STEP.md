@@ -42,8 +42,10 @@ Do this after Step 1 is settled.
 1. Go to console.firebase.google.com with the same Google account. **Add project**, name `khatabook`, turn **off** Google Analytics.
 2. On the project home, click the Android icon to add an app. Android package name: the one from Step 1. App nickname: Khatabook. Leave the SHA-1 empty for now.
 3. Download `google-services.json`. Open it in a text editor, copy the whole content, and add it as the GitHub secret `GOOGLE_SERVICES_JSON`.
-4. Click the gear icon, **Project settings**, **Service accounts**, **Generate new private key**. A JSON file downloads. This one is powerful: do not put it in GitHub. Instead, in each Supabase project go to **Edge Functions**, **Secrets**, add `FCM_SERVICE_ACCOUNT` with the file's full content as the value.
-5. Tell me in chat that it is done. Nothing to send.
+4. Click the gear icon, **Project settings**, **Service accounts**, **Generate new private key**. A JSON file downloads (named like `khatabook-xxxx-firebase-adminsdk-xxxx.json`). This one is powerful: do not put it in GitHub. Instead, in each Supabase project go to **Edge Functions**, **Secrets**, add `FCM_SERVICE_ACCOUNT` with the file's full content as the value.
+
+   The two files are easy to mix up. `google-services.json` starts with `"project_info"` and goes to GitHub only. The service account key starts with `"type": "service_account"` and has `"private_key"` and `"client_email"` inside. Only that second file works in `FCM_SERVICE_ACCOUNT`; with the wrong file, alerts still appear in the in app inbox but no push arrives.
+5. Tell me in chat that it is done. Nothing to send. I check it with the health call: the alert function answers `fcm_configured: true` once the right file is in place.
 
 ## Step 4. Your S3 bucket, for nightly backups (10 minutes)
 
