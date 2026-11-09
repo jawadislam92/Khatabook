@@ -11,6 +11,9 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
 import '../groups/groups_repository.dart';
 import '../groups/role_labels.dart';
+import '../invoices/invoice_labels.dart';
+import '../invoices/invoice_models.dart';
+import '../invoices/invoices_repository.dart';
 import '../spaces/spaces_repository.dart';
 import 'job_labels.dart';
 import 'jobs_models.dart';
@@ -87,15 +90,15 @@ class JobDetailScreen extends ConsumerWidget {
         primary = BigButton(
           label: l.finishJob,
           icon: Icons.task_alt,
-          onPressed: () async {
-            await repo.setStatus(jobId, JobStatus.finished);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(l.finishComingSoon)));
-            }
-          },
+          onPressed: () => context.push('/space/$spaceId/job/$jobId/finish'),
         );
       }
+    } else if ((mine || manager) && job.status == JobStatus.finished) {
+      primary = BigButton(
+        label: l.makeBill,
+        icon: Icons.receipt_long_outlined,
+        onPressed: () => context.push('/space/$spaceId/job/$jobId/finish'),
+      );
     }
 
     return Scaffold(
@@ -266,6 +269,9 @@ class JobDetailScreen extends ConsumerWidget {
             ],
           ),
           if (primary != null) ...[const SizedBox(height: Tokens.s3), primary],
+          if (job.status == JobStatus.invoiced || job.status == JobStatus.paid)
+            _InvoiceCard(spaceId: spaceId, jobId: jobId),
+          _ItemsUsed(spaceId: spaceId, jobId: jobId),
           const SizedBox(height: Tokens.s5),
           Text(
             l.whoGoes,
@@ -425,5 +431,112 @@ class JobDetailScreen extends ConsumerWidget {
           .setStatus(jobId, JobStatus.cancelled);
       if (context.mounted) context.pop();
     }
+  }
+}
+
+/// Link to the live bill once the job is invoiced or paid.
+class _InvoiceCard extends ConsumerWidget {
+  const _InvoiceCard({required this.spaceId, required this.jobId});
+  final String spaceId;
+  final String jobId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final inv = ref.watch(invoiceForJobProvider((spaceId, jobId))).value;
+    if (inv == null) return const SizedBox.shrink();
+    final color = invoiceStatusColor(inv.status);
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: Tokens.s3),
+      child: Material(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(Tokens.radius),
+        child: ListTile(
+          onTap: () => context.push('/space/$spaceId/invoice/${inv.id}'),
+          leading: Icon(Icons.receipt_long, color: color),
+          title: Text(
+            '${inv.number}  ·  Rs ${Money.format(inv.totalPaisa)}',
+            style: text.titleMedium?.copyWith(
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          subtitle: Text(
+            inv.isOpen
+                ? '${l.balanceDue} Rs ${Money.format(inv.balancePaisa)}'
+                : invoiceStatusLabel(l, inv.status),
+            style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+        ),
+      ),
+    );
+  }
+}
+
+/// Materials recorded against the job so far.
+class _ItemsUsed extends ConsumerWidget {
+  const _ItemsUsed({required this.spaceId, required this.jobId});
+  final String spaceId;
+  final String jobId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final items =
+        ref.watch(jobItemsProvider((spaceId, jobId))).value ??
+        const <JobItem>[];
+    if (items.isEmpty) return const SizedBox.shrink();
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: Tokens.s5),
+        Text(
+          l.itemsUsed,
+          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: Tokens.s2),
+        for (final i in items)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${i.description}  × ${formatQty(i.qty)}',
+                    style: text.bodyLarge,
+                  ),
+                ),
+                Text(
+                  'Rs ${Money.format(i.amountPaisa)}',
+                  style: text.bodyLarge?.copyWith(fontFamily: 'Roboto'),
+                ),
+              ],
+            ),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.total,
+                style: text.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Text(
+              'Rs ${Money.format(BillMath.subtotal(items))}',
+              style: text.titleMedium?.copyWith(
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

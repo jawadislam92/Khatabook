@@ -614,7 +614,6 @@
       }
     }
   },
-  "finishComingSoon": "Materials and the invoice come in the next build. The job is marked finished.",
   "catalog": "Catalog",
   "newItem": "New item",
   "editItem": "Edit item",
@@ -658,5 +657,181 @@
         "type": "int"
       }
     }
-  }
+  },
+  "itemsUsed": "Items used",
+  "quickAdd": "Quick add",
+  "searchItems": "Search items",
+  "otherCharge": "Other charge",
+  "otherChargeHint": "e.g. Transport, extra wiring",
+  "description": "Description",
+  "qty": "Qty",
+  "rate": "Rate",
+  "nothingAddedYet": "Nothing added yet. Tap a tile above to add what you used.",
+  "nextMakeBill": "Next: make the bill",
+  "saveItems": "Save items",
+  "itemsSaved": "Items saved",
+  "changePrice": "Change price",
+  "subtotal": "Subtotal",
+  "discount": "Discount",
+  "tax": "Tax",
+  "taxWithRate": "Tax ({rate}%)",
+  "@taxWithRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "total": "Total",
+  "howMuchPaidNow": "How much did the customer pay now?",
+  "fullAmount": "Full amount",
+  "nothingYet": "Nothing yet",
+  "otherAmount": "Other amount",
+  "paidBy": "Paid by",
+  "methodCash": "Cash",
+  "methodBank": "Bank",
+  "methodEasypaisa": "EasyPaisa",
+  "methodJazzcash": "JazzCash",
+  "methodOther": "Other",
+  "balanceDue": "Balance due",
+  "fullyPaid": "Fully paid",
+  "issueInvoice": "Issue the bill",
+  "issueInvoiceConfirm": "Bill of Rs {total} for {customer}. Rs {balance} will go on their khata as due. Issue it now?",
+  "@issueInvoiceConfirm": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "customer": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "issueInvoiceConfirmPaid": "Bill of Rs {total} for {customer}, fully paid. Issue it now?",
+  "@issueInvoiceConfirmPaid": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "customer": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceIssued": "Bill {number} issued",
+  "@invoiceIssued": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "tabInvoices": "Bills",
+  "issuedOn": "Issued {date}",
+  "@issuedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceStatusIssued": "Unpaid",
+  "invoiceStatusPaid": "Paid",
+  "invoiceStatusVoid": "Cancelled",
+  "received": "Received",
+  "recordPayment": "Record payment",
+  "paymentRecorded": "Payment recorded",
+  "payments": "Payments",
+  "noPaymentsYet": "No payments yet",
+  "voidInvoice": "Cancel this bill",
+  "voidInvoiceConfirm": "This cancels bill {number}, reverses its khata entries and payments, and puts the job back to finished. Continue?",
+  "@voidInvoiceConfirm": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceVoided": "Bill cancelled",
+  "sharePdf": "Share PDF",
+  "whatsapp": "WhatsApp",
+  "invoiceMessage": "{business}\nBill {number} for {customer}\nTotal: Rs {total}\nReceived: Rs {received}\nBalance due: Rs {balance}\nThank you.",
+  "@invoiceMessage": {
+    "placeholders": {
+      "business": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      },
+      "customer": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "received": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "makeBill": "Make the bill",
+  "viewBill": "View bill",
+  "billFor": "Bill for {customer}",
+  "@billFor": {
+    "placeholders": {
+      "customer": {
+        "type": "String"
+      }
+    }
+  },
+  "businessDetails": "Business details",
+  "businessNameEn": "Business name (English)",
+  "businessNameUr": "Business name (Urdu)",
+  "tagline": "Tagline",
+  "address": "Address",
+  "phone": "Phone",
+  "bankName": "Bank",
+  "accountTitle": "Account title",
+  "accountNumber": "Account number or IBAN",
+  "easypaisaNumber": "EasyPaisa number",
+  "jazzcashNumber": "JazzCash number",
+  "invoiceTerms": "Terms printed on bills",
+  "invoiceTermsHint": "e.g. One year warranty on installation. Goods once sold are not returned.",
+  "invoicePrefix": "Bill number prefix",
+  "taxEnabled": "Add tax to bills",
+  "taxRate": "Tax rate (%)",
+  "businessNudge": "Add your business name and payment details so bills look right.",
+  "thisMonth": "This month",
+  "invoiced": "Billed",
+  "jobsDone": "Jobs done",
+  "unpaidBills": "{count, plural, =0{No unpaid bills} =1{1 unpaid bill} other{{count} unpaid bills}}",
+  "@unpaidBills": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsUsedThisMonth": "Items used this month",
+  "noItemsUsed": "Nothing billed this month yet.",
+  "noInvoices": "No bills yet. Finish a job and its bill shows up here.",
+  "filterUnpaid": "Unpaid",
+  "filterAll": "All",
+  "needOneItem": "Add at least one item or charge first.",
+  "discountTooBig": "Discount cannot be more than the subtotal.",
+  "receivedTooBig": "Received cannot be more than the total.",
+  "pdfInvoice": "INVOICE",
+  "pdfBillTo": "Bill to",
+  "pdfJob": "Job",
+  "pdfPayTo": "Payment details",
+  "pdfThanks": "Thank you for your business.",
+  "pdfMadeWith": "Made with Duebook",
+  "pdfPaidStamp": "PAID"
 }

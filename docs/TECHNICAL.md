@@ -129,10 +129,11 @@ All tables have `id uuid`, `created_at`, `updated_at`, `created_by`. Most have `
 | `job_events` | job_id, event_type, from_status, to_status, actor_id, note, created_at | Full status history. |
 | `job_photos` | job_id, storage_path, kind (before, after) | |
 | `job_items` | job_id, item_id, qty, unit_price_paisa, note | What was used. Snapshot of price at the time. |
-| `invoices` | job_id, space_id, number, issued_at, customer_id, subtotal, discount, tax, total, received_paisa, balance_paisa, status (draft, pending_approval, issued, paid, void), pdf_path, terms_text | Number assigned by an Edge Function using a per space counter, so there are never gaps or duplicates. |
+| `invoices` | job_id, space_id, number, issued_at, customer_id, subtotal, discount, tax_rate_bp, tax, total, received_paisa, balance_paisa, status (issued, paid, void), notes, terms_text, ledger_entry_id | Number assigned inside the `issue_invoice()` transaction from `invoice_counters` (one row per space and year), so there are never gaps or duplicates. One live invoice per job. |
 | `invoice_lines` | invoice_id, description, qty, unit_price_paisa, amount_paisa | Frozen copy of job_items at issue time. |
-| `payments` | invoice_id, customer_id, method (cash, bank, easypaisa, jazzcash, other), amount_paisa, paid_at, note, recorded_by | Trigger updates invoice balance and inserts a ledger entry. |
-| `share_links` | invoice_id, token_hash, expires_at, revoked_at, view_count | Public invoice link, 30 day default. |
+| `payments` | invoice_id, customer_id, method (cash, bank, easypaisa, jazzcash, other), amount_paisa, paid_at, note, recorded_by, ledger_entry_id, voided_at | `record_payment()` updates the invoice balance and inserts the `got` ledger entry in the same transaction. |
+| `business_profiles` | space_id, name_en, name_ur, tagline, address, phone, email, bank and wallet details, terms_text, tax_enabled, tax_rate_bp, invoice_prefix | What prints on every bill. Managers edit it. |
+| `share_links` (phase 5) | invoice_id, token_hash, expires_at, revoked_at, view_count | Public invoice link, 30 day default. |
 
 ### Notifications
 

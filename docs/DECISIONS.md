@@ -24,8 +24,9 @@ These are set to working defaults so the build can proceed. Changing them is che
 | App name | **Duebook** (decided 8 Nov 2026) | Settled |
 | Android package name | `com.sparkingasia.duebook` (domain confirmed: sparkingasia.com) | Before creating the Firebase Android app |
 | Palette | Teal `#0E8C7F`, blue, saffron `#F59E0B`, indigo, one hue per space kind | Any time |
-| Business name, logo, address, payment details | Sample values in seed data | Before phase 4 |
-| Item catalog | Sample CCTV and solar items in seed data | Before phase 4 |
+| Business name, address, payment details, terms, tax | Entered in the app: Bills tab, Business details | Any time |
+| Business logo on the bill | Not yet (phase 5, with the public invoice link) | Phase 5 |
+| Item catalog | Entered in the app: Catalog tab | Any time |
 | Who sees cost prices | Owner only | Any time, it is a space setting |
 
 ## Infrastructure created on 8 November 2026
@@ -35,7 +36,7 @@ These are set to working defaults so the build can proceed. Changing them is che
 | Supabase organisation | sparkingasia |
 | Development project | `khatabook-dev`, ref `jepcsftdjejjzhfjnavy`, Mumbai, URL https://jepcsftdjejjzhfjnavy.supabase.co |
 | Production project | `khatabook-prod`, ref `ohrnkvzemgfrxcuknamh`, Mumbai, URL https://ohrnkvzemgfrxcuknamh.supabase.co |
-| Migrations | All applied to both dev and prod through the Supabase connector on 8 Nov 2026. Later migrations go through the pipeline. |
+| Migrations | Foundation to jobs applied 8 Nov 2026, invoices applied 9 Nov 2026, both dev and prod, through the Supabase connector. Later migrations go through the pipeline. |
 | Edge Functions | `run_due_notifications` (every minute) and `backup_to_s3` (22:00 UTC, 3 am Pakistan) deployed on both projects; pg_cron schedules active. |
 | Backups | S3 bucket `duebook-backups`, region ap-south-1, nightly from prod. |
 

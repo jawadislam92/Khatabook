@@ -25,3 +25,12 @@ To retake: `flutter build web --release --no-tree-shake-icons --pwa-strategy=non
 | 34 | New job: customer, title, type, when, who goes |
 | 35 | Item catalog by category, cost price visible to the owner only |
 | 36 | Notification inbox |
+| 40 | Job in progress: the installer has started work, the Finish job button is up |
+| 41, 42 | Finish job: quick tiles for favourite items, search, other charge, then the lines with quantities and the running total |
+| 43, 44 | The bill: lines, discount, how much was paid now, paid by, balance due |
+| 45 | Plain sentence confirmation before the bill is issued |
+| 46 | The issued bill: totals, items, payments, Share PDF, WhatsApp, Record payment |
+| 47 | Record a payment: amount, method, note |
+| 48 | Bills tab: this month billed, received, jobs done, unpaid total, the unpaid list |
+| 49 | Business details: what prints on every bill |
+| 50 | Items used this month report |

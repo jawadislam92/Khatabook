@@ -53,17 +53,17 @@ Do this after Step 1 is settled.
 4. Create an access key for that user. Add both values as Supabase Edge Function secrets on the prod project: `BACKUP_S3_ACCESS_KEY` and `BACKUP_S3_SECRET_KEY`.
 5. Send me in chat: the bucket name and region.
 
-## Step 5. Business content for invoices (whenever convenient, before phase 4)
+## Step 5. Business content for invoices (now done inside the app)
 
-Send in chat or as files:
+No need to send anything in chat. The owner or a manager fills this in once, on the phone:
 
-- Business name in English and Urdu
-- Logo, PNG with transparent background, at least 1000 pixels wide
-- Address and phone numbers to print on the invoice
-- Bank name, account title, account number or IBAN, EasyPaisa number, JazzCash number
-- Warranty or terms text, if any
-- Job types the business does
-- The item list: name, unit, sale price, cost price if you want profit reports. A photo of a handwritten price list or a current bill is fine.
+1. Open the business space, tap the **Bills** tab, then the shop icon at the top right (**Business details**).
+2. Fill in the business name in English and Urdu, tagline, address, phone, email.
+3. Fill in the payment details that print on every bill: bank, account title, account number or IBAN, EasyPaisa, JazzCash. Only the ones you fill are printed.
+4. Set the bill number prefix (default `INV`, so bills read `INV-2026-0001`), the terms line, and turn tax on only if you charge it.
+5. The **Catalog** tab is where the item list lives: name, unit, sale price, cost price (owner only), and the quick tile switch for the things used on most jobs.
+
+A logo upload comes in phase 5 together with the public invoice link.
 
 ## Step 6. Test phones and testers (before the first APK, during phase 1)
 

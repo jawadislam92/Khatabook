@@ -179,11 +179,11 @@ Each phase ends with a working build on real phones. Times are rough and assume 
 
 | Phase | What ships | Rough time |
 |---|---|---|
-| 0. Foundation | Decisions below settled. Supabase project, repo structure, CI that builds an APK, design tokens, English and Urdu string files, login, app lock, simple mode framework. | 1 week |
-| 1. Personal ledger | Parties, entries, balances, entry history and reversal, reminders, PDF statement, search, export. Installable on family phones. | 2 to 3 weeks |
-| 2. Family groups | Groups, invites, roles, shared books, group dashboard, activity feed, push notifications for shared entries, month lock. | 2 weeks |
-| 3. Jobs and team notifications | Business toggle, customers, item catalog, jobs, assignment, statuses, the full notification rule set, Today board, My Jobs. | 2 to 3 weeks |
-| 4. Invoicing | Finish job flow, invoice PDF, numbering, share via WhatsApp and link, payments, automatic ledger entries, approval setting, reports. | 2 weeks |
+| 0. Foundation (done) | Decisions below settled. Supabase project, repo structure, CI that builds an APK, design tokens, English and Urdu string files, login, app lock, simple mode framework. | 1 week |
+| 1. Personal ledger (done) | Parties, entries, balances, entry history and reversal, reminders, PDF statement, search, export. Installable on family phones. | 2 to 3 weeks |
+| 2. Family groups (done) | Groups, invites, roles, shared books, group dashboard, activity feed, push notifications for shared entries, month lock. | 2 weeks |
+| 3. Jobs and team notifications (done) | Business toggle, customers, item catalog, jobs, assignment, statuses, the full notification rule set, Today board, My Jobs. | 2 to 3 weeks |
+| 4. Invoicing (done) | Finish job flow with quick tiles, bill with discount and amount paid now, invoice numbering per year, PDF with business details, share sheet and WhatsApp, payments, void with reversal, automatic khata entries, Bills tab with this month and unpaid, items used report, business details screen. Public invoice link and approval setting moved to phase 5. | 2 weeks |
 | 5. Hardening and release | Offline queue, security review against the checklist in TECHNICAL.md, backups, Play Store internal testing then production, help screens, onboarding. iOS build if wanted. | 2 weeks |
 
 Phases 1 and 2 give the family a usable app early while the business part is built.

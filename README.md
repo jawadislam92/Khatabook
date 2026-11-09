@@ -5,7 +5,7 @@ One mobile app with two uses:
 1. **Family khatabook.** Personal and shared ledgers for family and friends. Who owes us, whom do we owe, all in one place, with a simple mode for elders.
 2. **Business workspace** for the CCTV and solar business. Customers, job scheduling with automatic team notifications, materials used on the job, and an invoice ready to share with the customer on the spot. Unpaid invoices become customer udhaar in the business ledger automatically.
 
-**Status:** Phase 0 (foundation) in progress. Decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md). The Flutter app lives in [app/](app/), the database in [supabase/](supabase/), and the build pipeline in [.github/workflows/](.github/workflows/).
+**Status:** Phases 0 to 4 are built: ledger, family groups, jobs with team alerts, and invoicing with payments. Phase 5 (hardening and release) is next. Decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md). The Flutter app lives in [app/](app/), the database in [supabase/](supabase/), and the build pipeline in [.github/workflows/](.github/workflows/).
 
 | Document | What it covers |
 |---|---|

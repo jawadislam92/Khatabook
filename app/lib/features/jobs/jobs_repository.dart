@@ -310,9 +310,12 @@ class SupabaseJobsRepository implements JobsRepository {
 /// Preview mode: sample jobs for the sample business space.
 class PreviewJobsRepository implements JobsRepository {
   PreviewJobsRepository(this._ledger) {
-    _seed();
+    ready = _seed();
   }
   final LedgerRepository _ledger;
+
+  /// Completes once the sample data is in place.
+  late final Future<void> ready;
   final _uuid = const Uuid();
   final _jobs = <Job>[];
   final _events = <String, List<JobEvent>>{};

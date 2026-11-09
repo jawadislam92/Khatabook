@@ -7,6 +7,7 @@ import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
 import '../groups/role_labels.dart';
+import '../invoices/invoices_tab.dart';
 import '../ledger/space_home_screen.dart';
 import '../spaces/spaces_repository.dart';
 import 'catalog_screen.dart';
@@ -50,6 +51,7 @@ class _BusinessHomeScreenState extends ConsumerState<BusinessHomeScreen> {
         spaceName: space?.name ?? '',
       ),
       _JobsTab(spaceId: widget.spaceId),
+      InvoicesTab(spaceId: widget.spaceId, manager: manager),
       SpaceHomeScreen(spaceId: widget.spaceId, embedded: true),
       CatalogScreen(spaceId: widget.spaceId, embedded: true),
     ];
@@ -76,6 +78,11 @@ class _BusinessHomeScreenState extends ConsumerState<BusinessHomeScreen> {
             icon: const Icon(Icons.assignment_outlined),
             selectedIcon: const Icon(Icons.assignment),
             label: l.tabJobs,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.receipt_long_outlined),
+            selectedIcon: const Icon(Icons.receipt_long),
+            label: l.tabInvoices,
           ),
           NavigationDestination(
             icon: const Icon(Icons.menu_book_outlined),
