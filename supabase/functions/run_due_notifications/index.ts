@@ -89,6 +89,21 @@ Deno.serve(async (req) => {
   if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) {
     return new Response("forbidden", { status: 403 });
   }
+  // GET is a health check: says which secrets are present, never their values.
+  if (req.method === "GET") {
+    const raw = Deno.env.get("FCM_SERVICE_ACCOUNT");
+    const names = Object.keys(Deno.env.toObject()).filter((k) => !k.startsWith("SUPABASE_") && !k.startsWith("DENO_")).sort();
+    return Response.json({
+      ok: true,
+      fcm_configured: !!serviceAccount?.client_email && !!serviceAccount?.private_key,
+      fcm_project: serviceAccount?.project_id ?? null,
+      fcm_key_id: serviceAccount?.private_key_id ? String(serviceAccount.private_key_id).slice(0, 6) : null,
+      fcm_raw_length: raw?.length ?? 0,
+      fcm_parsed_type: serviceAccount === null ? "null" : Array.isArray(serviceAccount) ? "array" : typeof serviceAccount,
+      fcm_keys: serviceAccount && typeof serviceAccount === "object" ? Object.keys(serviceAccount) : [],
+      secret_names: names,
+    });
+  }
   const { data: due, error } = await supabase
     .from("scheduled_notifications").select("*")
     .lte("due_at", new Date().toISOString()).is("sent_at", null).is("cancelled_at", null)
