@@ -53,8 +53,12 @@ jobs:
       - run: flutter test --coverage
       - name: Debug APK builds
         run: flutter build apk --debug --dart-define=SUPABASE_URL=https://example.supabase.co --dart-define=SUPABASE_ANON_KEY=ci
+      # Debug APKs are about 100 MB each and the private repository storage
+      # allowance is 500 MB, so only main keeps one, briefly. Test builds for
+      # phones are handed over directly instead.
       - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
         with:
           name: app-debug.apk
           path: app/build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 7
+          retention-days: 2
