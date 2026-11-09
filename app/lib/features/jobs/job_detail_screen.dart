@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
 import '../groups/groups_repository.dart';
@@ -30,11 +31,38 @@ class JobDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final key = (spaceId, jobId);
+    final job = ref.watch(jobProvider(key));
+    void retry() => ref.invalidate(jobProvider(key));
+    return job.when(
+      skipLoadingOnReload: true,
+      loading: () => const LoadingScaffold(),
+      error: (e, _) => LoadErrorScaffold(onRetry: retry),
+      data: (job) => job == null
+          ? LoadErrorScaffold(onRetry: retry)
+          : _content(context, ref, job),
+    );
+  }
+
+  /// Runs a write and tells the user when it fails, so a tap never does
+  /// nothing without a word.
+  Future<void> _run(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+    } catch (e) {
+      if (!context.mounted) return;
+      final l = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(friendlyError(l, e))));
+    }
+  }
+
+  Widget _content(BuildContext context, WidgetRef ref, Job job) {
     final l = AppLocalizations.of(context);
-    final job = ref.watch(jobProvider((spaceId, jobId))).value;
-    final events =
-        ref.watch(jobEventsProvider((spaceId, jobId))).value ??
-        const <JobEvent>[];
+    final events = ref.watch(jobEventsProvider((spaceId, jobId)));
     final me = ref.watch(currentUserProvider).value?.id ?? '';
     final space = ref
         .watch(mySpacesProvider)
@@ -48,12 +76,6 @@ class JobDetailScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toString();
-    if (job == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
     final color = statusColor(job.status);
     final mine = job.isAssignedTo(me);
     final iConfirmed =
@@ -70,7 +92,7 @@ class JobDetailScreen extends ConsumerWidget {
         primary = BigButton(
           label: l.confirmJob,
           icon: Icons.check_circle_outline,
-          onPressed: () => repo.confirm(jobId),
+          onPressed: () => _run(context, () => repo.confirm(jobId)),
         );
       } else if ((mine || manager) &&
           (job.status == JobStatus.scheduled ||
@@ -78,13 +100,15 @@ class JobDetailScreen extends ConsumerWidget {
         primary = BigButton(
           label: l.onMyWay,
           icon: Icons.directions_car_outlined,
-          onPressed: () => repo.setStatus(jobId, JobStatus.onTheWay),
+          onPressed: () =>
+              _run(context, () => repo.setStatus(jobId, JobStatus.onTheWay)),
         );
       } else if ((mine || manager) && job.status == JobStatus.onTheWay) {
         primary = BigButton(
           label: l.startWork,
           icon: Icons.handyman_outlined,
-          onPressed: () => repo.setStatus(jobId, JobStatus.working),
+          onPressed: () =>
+              _run(context, () => repo.setStatus(jobId, JobStatus.working)),
         );
       } else if ((mine || manager) && job.status == JobStatus.working) {
         primary = BigButton(
@@ -107,16 +131,14 @@ class JobDetailScreen extends ConsumerWidget {
         actions: [
           if (manager && job.status.isOpen)
             PopupMenuButton<String>(
-              onSelected: (v) async {
-                switch (v) {
-                  case 'time':
-                    await _reschedule(context, ref, job);
-                  case 'who':
-                    await _assign(context, ref, job);
-                  case 'cancel':
-                    await _cancel(context, ref, job);
-                }
-              },
+              onSelected: (v) => _run(
+                context,
+                () => switch (v) {
+                  'time' => _reschedule(context, ref, job),
+                  'who' => _assign(context, ref, job),
+                  _ => _cancel(context, ref, job),
+                },
+              ),
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'time',
@@ -194,11 +216,13 @@ class JobDetailScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.schedule, size: 20),
                     const SizedBox(width: Tokens.s2),
-                    Text(
-                      '${DateFormat.yMMMEd(locale).format(job.scheduledAt)}  ${DateFormat.jm(locale).format(job.scheduledAt)}',
-                      style: text.titleMedium?.copyWith(
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        '${DateFormat.yMMMEd(locale).format(job.scheduledAt)}  ${DateFormat.jm(locale).format(job.scheduledAt)}',
+                        style: text.titleMedium?.copyWith(
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -313,7 +337,12 @@ class JobDetailScreen extends ConsumerWidget {
             style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: Tokens.s2),
-          for (final e in events.reversed)
+          if (events.failed)
+            LoadError(
+              onRetry: () =>
+                  ref.invalidate(jobEventsProvider((spaceId, jobId))),
+            ),
+          for (final e in (events.value ?? const <JobEvent>[]).reversed)
             ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
@@ -443,7 +472,14 @@ class _InvoiceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final inv = ref.watch(invoiceForJobProvider((spaceId, jobId))).value;
+    final key = (spaceId, jobId);
+    final found = ref.watch(invoiceForJobProvider(key));
+    if (found.failed) {
+      return LoadError(
+        onRetry: () => ref.invalidate(invoiceForJobProvider(key)),
+      );
+    }
+    final inv = found.value;
     if (inv == null) return const SizedBox.shrink();
     final color = invoiceStatusColor(inv.status);
     final text = Theme.of(context).textTheme;
@@ -484,9 +520,12 @@ class _ItemsUsed extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final items =
-        ref.watch(jobItemsProvider((spaceId, jobId))).value ??
-        const <JobItem>[];
+    final key = (spaceId, jobId);
+    final loaded = ref.watch(jobItemsProvider(key));
+    if (loaded.failed) {
+      return LoadError(onRetry: () => ref.invalidate(jobItemsProvider(key)));
+    }
+    final items = loaded.value ?? const <JobItem>[];
     if (items.isEmpty) return const SizedBox.shrink();
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;

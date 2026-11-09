@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/theme/tokens.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import 'jobs_repository.dart';
 
@@ -41,7 +42,9 @@ class NotificationsScreen extends ConsumerWidget {
           Expanded(
             child: list.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(l.errorGeneric)),
+              error: (e, _) => LoadError(
+                onRetry: () => ref.invalidate(notificationsProvider),
+              ),
               data: (items) => items.isEmpty
                   ? Center(
                       child: Padding(

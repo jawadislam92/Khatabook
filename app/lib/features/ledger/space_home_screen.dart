@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
 import '../groups/groups_models.dart';
@@ -52,13 +53,17 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
     final spaceName = space == null
         ? ''
         : (space.kind == SpaceKind.personal ? l.spacePersonal : space.name);
-    final totals =
-        ref.watch(spaceTotalsProvider(widget.spaceId)).value ??
-        SpaceTotals.zero;
+    final totalsLoad = ref.watch(spaceTotalsProvider(widget.spaceId));
+    final totals = totalsLoad.value ?? SpaceTotals.zero;
     final parties = ref.watch(partyBalancesProvider(widget.spaceId));
-    final reminders =
-        ref.watch(remindersProvider(widget.spaceId)).value ??
-        const <Reminder>[];
+    final remindersLoad = ref.watch(remindersProvider(widget.spaceId));
+    final reminders = remindersLoad.value ?? const <Reminder>[];
+    void retry() {
+      ref.invalidate(partyBalancesProvider(widget.spaceId));
+      ref.invalidate(spaceTotalsProvider(widget.spaceId));
+      ref.invalidate(remindersProvider(widget.spaceId));
+    }
+
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final hue = switch ((space?.kind, space?.businessEnabled)) {
@@ -125,7 +130,11 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
             Tokens.s7 * 2,
           ),
           children: [
-            _TotalsCard(totals: totals, hue: hue, simple: simple),
+            // Zero totals after a failed request would read as "nothing due".
+            if (totalsLoad.failed || remindersLoad.failed)
+              LoadError(onRetry: retry),
+            if (!totalsLoad.failed)
+              _TotalsCard(totals: totals, hue: hue, simple: simple),
             const SizedBox(height: Tokens.s3),
             Row(
               children: [
@@ -217,7 +226,7 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
                 padding: EdgeInsets.all(Tokens.s6),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (e, _) => Text(l.errorGeneric),
+              error: (e, _) => LoadError(onRetry: retry),
               data: (list) {
                 final filtered = _query.isEmpty
                     ? list
@@ -538,8 +547,11 @@ class _ByMember extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final members =
-        ref.watch(membersProvider(spaceId)).value ?? const <Member>[];
+    final membersLoad = ref.watch(membersProvider(spaceId));
+    if (membersLoad.failed) {
+      return LoadError(onRetry: () => ref.invalidate(membersProvider(spaceId)));
+    }
+    final members = membersLoad.value ?? const <Member>[];
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final active = members.where((m) => m.entriesCount > 0).toList()
@@ -610,10 +622,14 @@ class _ByMember extends ConsumerWidget {
                             size: 14,
                             color: MoneyText.colorFor(context, true),
                           ),
-                          Text(
-                            ' ${m.gavePaisa ~/ 100}  ',
-                            style: text.labelMedium?.copyWith(
-                              fontFamily: 'Roboto',
+                          Flexible(
+                            child: Text(
+                              ' ${m.gavePaisa ~/ 100}  ',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.labelMedium?.copyWith(
+                                fontFamily: 'Roboto',
+                              ),
                             ),
                           ),
                           Icon(
@@ -621,10 +637,14 @@ class _ByMember extends ConsumerWidget {
                             size: 14,
                             color: MoneyText.colorFor(context, false),
                           ),
-                          Text(
-                            ' ${m.gotPaisa ~/ 100}',
-                            style: text.labelMedium?.copyWith(
-                              fontFamily: 'Roboto',
+                          Flexible(
+                            child: Text(
+                              ' ${m.gotPaisa ~/ 100}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.labelMedium?.copyWith(
+                                fontFamily: 'Roboto',
+                              ),
                             ),
                           ),
                         ],

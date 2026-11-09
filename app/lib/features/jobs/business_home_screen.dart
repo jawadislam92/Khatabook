@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/tokens.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
 import '../groups/role_labels.dart';
@@ -138,7 +139,8 @@ class _TodayTab extends ConsumerWidget {
       ),
       body: all.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l.errorGeneric)),
+        error: (e, _) =>
+            LoadError(onRetry: () => ref.invalidate(jobsProvider(spaceId))),
         data: (jobs) {
           final mine = manager
               ? jobs
@@ -259,7 +261,9 @@ class _JobsTabState extends ConsumerState<_JobsTab> {
       ),
       body: all.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l.errorGeneric)),
+        error: (e, _) => LoadError(
+          onRetry: () => ref.invalidate(jobsProvider(widget.spaceId)),
+        ),
         data: (jobs) {
           final list =
               (_showClosed

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
 import '../groups/role_labels.dart';
@@ -30,11 +31,24 @@ class InvoiceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final key = (spaceId, invoiceId);
+    final invoice = ref.watch(invoiceProvider(key));
+    void retry() => ref.invalidate(invoiceProvider(key));
+    return invoice.when(
+      skipLoadingOnReload: true,
+      loading: () => const LoadingScaffold(),
+      error: (e, _) => LoadErrorScaffold(onRetry: retry),
+      data: (inv) => inv == null
+          ? LoadErrorScaffold(onRetry: retry)
+          : _content(context, ref, inv),
+    );
+  }
+
+  Widget _content(BuildContext context, WidgetRef ref, Invoice inv) {
     final l = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toString();
-    final inv = ref.watch(invoiceProvider((spaceId, invoiceId))).value;
     final profile = ref.watch(businessProfileProvider(spaceId)).value;
     final me = ref.watch(currentUserProvider).value?.id ?? '';
     final space = ref
@@ -46,12 +60,6 @@ class InvoiceScreen extends ConsumerWidget {
       space?.myRole ?? MemberRole.viewer,
       MemberRole.manager,
     );
-    if (inv == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
     final job = inv.jobId == null
         ? null
         : ref.watch(jobProvider((spaceId, inv.jobId!))).value;

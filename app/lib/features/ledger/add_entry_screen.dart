@@ -7,6 +7,7 @@ import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/number_words.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/number_pad.dart';
 import '../../l10n/app_localizations.dart';
 import 'ledger_models.dart';
@@ -118,7 +119,10 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
         Expanded(
           child: parties.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text(l.errorGeneric)),
+            error: (e, _) => LoadError(
+              onRetry: () =>
+                  ref.invalidate(partyBalancesProvider(widget.spaceId)),
+            ),
             data: (list) {
               final filtered =
                   (_query.isEmpty

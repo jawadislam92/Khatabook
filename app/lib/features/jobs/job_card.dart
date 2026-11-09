@@ -51,14 +51,20 @@ class JobCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            showDate ? '$date  $time' : time,
-                            style: text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontFamily: 'Roboto',
+                          // Large text (simple mode) must not push the
+                          // status chips off the card.
+                          Expanded(
+                            child: Text(
+                              showDate ? '$date  $time' : time,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'Roboto',
+                              ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 6),
                           _Chip(
                             label: statusLabel(l, job.status),
                             color: color,

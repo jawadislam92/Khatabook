@@ -6,6 +6,7 @@ import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
 import '../../core/utils/money.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
 import '../spaces/spaces_repository.dart';
@@ -36,9 +37,14 @@ class PartyScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     if (pb == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+      // The person comes from the balances list; no person once that list
+      // has loaded means it failed or the person is gone.
+      final balances = ref.watch(partyBalancesProvider(spaceId));
+      if (balances.isLoading && !balances.hasError) {
+        return const LoadingScaffold();
+      }
+      return LoadErrorScaffold(
+        onRetry: () => ref.invalidate(partyBalancesProvider(spaceId)),
       );
     }
     final sign = pb.settled ? null : pb.willGet;
@@ -203,7 +209,10 @@ class PartyScreen extends ConsumerWidget {
           Expanded(
             child: entries.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(l.errorGeneric)),
+              error: (e, _) => LoadError(
+                onRetry: () =>
+                    ref.invalidate(partyEntriesProvider((spaceId, partyId))),
+              ),
               data: (list) => list.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.all(Tokens.s5),

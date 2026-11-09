@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../groups/role_labels.dart';
 import '../jobs/job_labels.dart';
@@ -33,19 +34,39 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
   final _lines = <JobItem>[];
   final _search = TextEditingController();
   bool _loaded = false;
+  bool _loadFailed = false;
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    ref.read(invoicesRepositoryProvider).jobItems(widget.jobId).then((items) {
+    _load();
+    _search.addListener(() => setState(() {}));
+  }
+
+  Future<void> _load() async {
+    try {
+      final items = await ref
+          .read(invoicesRepositoryProvider)
+          .jobItems(widget.jobId);
       if (!mounted) return;
       setState(() {
-        _lines.addAll(items);
+        _lines
+          ..clear()
+          ..addAll(items);
         _loaded = true;
       });
-    });
-    _search.addListener(() => setState(() {}));
+    } catch (_) {
+      if (mounted) setState(() => _loadFailed = true);
+    }
+  }
+
+  void _retry() {
+    ref.invalidate(jobProvider((widget.spaceId, widget.jobId)));
+    if (!_loaded) {
+      setState(() => _loadFailed = false);
+      _load();
+    }
   }
 
   @override
@@ -252,9 +273,18 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
   Future<void> _next(Job job) async {
     if (!await _save()) return;
     if (job.status == JobStatus.working) {
-      await ref
-          .read(jobsRepositoryProvider)
-          .setStatus(widget.jobId, JobStatus.finished);
+      try {
+        await ref
+            .read(jobsRepositoryProvider)
+            .setStatus(widget.jobId, JobStatus.finished);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context).errorGeneric)),
+          );
+        }
+        return;
+      }
     }
     if (!mounted) return;
     context.pushReplacement(
@@ -268,11 +298,19 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final lang = Localizations.localeOf(context).languageCode;
-    final job = ref.watch(jobProvider((widget.spaceId, widget.jobId))).value;
-    final catalog =
-        (ref.watch(catalogProvider(widget.spaceId)).value ?? const [])
-            .where((i) => i.active)
-            .toList();
+    final jobLoad = ref.watch(jobProvider((widget.spaceId, widget.jobId)));
+    final job = jobLoad.value;
+    final missing = jobLoad.hasValue && !jobLoad.isLoading && job == null;
+    if (_loadFailed || jobLoad.failed || missing) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l.itemsUsed)),
+        body: LoadError(onRetry: _retry),
+      );
+    }
+    final catalogLoad = ref.watch(catalogProvider(widget.spaceId));
+    final catalog = (catalogLoad.value ?? const <CatalogItem>[])
+        .where((i) => i.active)
+        .toList();
     final space = ref
         .watch(mySpacesProvider)
         .value
@@ -331,6 +369,11 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
+                if (catalogLoad.failed)
+                  LoadError(
+                    onRetry: () =>
+                        ref.invalidate(catalogProvider(widget.spaceId)),
+                  ),
                 if (favourites.isNotEmpty) ...[
                   const SizedBox(height: Tokens.s4),
                   Text(

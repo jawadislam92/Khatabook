@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../groups/groups_repository.dart';
 import '../ledger/ledger_repository.dart';
@@ -49,10 +50,10 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
     final l = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final locale = Localizations.localeOf(context).toString();
-    final parties =
-        ref.watch(partyBalancesProvider(widget.spaceId)).value ?? const [];
-    final members =
-        ref.watch(membersProvider(widget.spaceId)).value ?? const [];
+    final partiesLoad = ref.watch(partyBalancesProvider(widget.spaceId));
+    final membersLoad = ref.watch(membersProvider(widget.spaceId));
+    final parties = partiesLoad.value ?? const [];
+    final members = membersLoad.value ?? const [];
     final customer = parties
         .where((p) => p.party.id == _customerId)
         .firstOrNull;
@@ -61,6 +62,14 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
       body: ListView(
         padding: const EdgeInsets.all(Tokens.s4),
         children: [
+          // Without these two lists there is no customer or person to pick.
+          if (partiesLoad.failed || membersLoad.failed)
+            LoadError(
+              onRetry: () {
+                ref.invalidate(partyBalancesProvider(widget.spaceId));
+                ref.invalidate(membersProvider(widget.spaceId));
+              },
+            ),
           Text(l.customer, style: text.labelLarge),
           const SizedBox(height: Tokens.s1),
           Card(

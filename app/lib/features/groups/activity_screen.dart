@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
 import 'groups_models.dart';
@@ -25,7 +26,8 @@ class ActivityScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l.activity)),
       body: items.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l.errorGeneric)),
+        error: (e, _) =>
+            LoadError(onRetry: () => ref.invalidate(activityProvider(spaceId))),
         data: (list) => list.isEmpty
             ? Center(
                 child: Padding(

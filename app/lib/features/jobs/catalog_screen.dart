@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../groups/role_labels.dart';
 import '../spaces/spaces_repository.dart';
@@ -50,7 +51,8 @@ class CatalogScreen extends ConsumerWidget {
           : null,
       body: items.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l.errorGeneric)),
+        error: (e, _) =>
+            LoadError(onRetry: () => ref.invalidate(catalogProvider(spaceId))),
         data: (list) {
           if (list.isEmpty) {
             return Center(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
 import '../../core/utils/money.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
 import 'ledger_models.dart';
@@ -24,18 +25,30 @@ class EntryDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final entries =
-        ref.watch(partyEntriesProvider((spaceId, partyId))).value ??
-        const <Entry>[];
-    final entry = entries.where((e) => e.id == entryId).firstOrNull;
-    final pb = ref.watch(partyProvider((spaceId, partyId)));
+    final key = (spaceId, partyId);
+    final entriesLoad = ref.watch(partyEntriesProvider(key));
+    final balancesLoad = ref.watch(partyBalancesProvider(spaceId));
+    final entry = (entriesLoad.value ?? const <Entry>[])
+        .where((e) => e.id == entryId)
+        .firstOrNull;
+    final pb = ref.watch(partyProvider(key));
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     if (entry == null || pb == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      final settled =
+          entriesLoad.hasValue &&
+          !entriesLoad.isLoading &&
+          balancesLoad.hasValue &&
+          !balancesLoad.isLoading;
+      if (entriesLoad.failed || balancesLoad.failed || settled) {
+        return LoadErrorScaffold(
+          onRetry: () {
+            ref.invalidate(partyEntriesProvider(key));
+            ref.invalidate(partyBalancesProvider(spaceId));
+          },
+        );
+      }
+      return const LoadingScaffold();
     }
     final gave = entry.direction == EntryDirection.gave;
     final color = MoneyText.colorFor(context, gave);

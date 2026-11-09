@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:duebook/core/security/pin_store.dart';
 import 'package:duebook/core/security/secure_store.dart';
@@ -16,6 +17,8 @@ Future<ProviderContainer> pumpScreen(
   bool simpleMode = false,
   String language = 'en',
   Map<String, Object> prefs = const {},
+  List<Override> overrides = const [],
+  bool appRetry = false,
 }) async {
   SharedPreferences.setMockInitialValues({
     'simple_mode': simpleMode,
@@ -27,7 +30,11 @@ Future<ProviderContainer> pumpScreen(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(sp),
       secureStoreProvider.overrideWithValue(MemorySecureStore()),
+      ...overrides,
     ],
+    // Most tests check the first failure directly and must not leave retry
+    // timers behind. [appRetry] uses the app's own retry rule instead.
+    retry: appRetry ? null : (_, _) => null,
   );
   addTearDown(container.dispose);
   await tester.pumpWidget(

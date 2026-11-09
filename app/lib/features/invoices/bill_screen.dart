@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
 import '../jobs/jobs_repository.dart';
@@ -54,16 +55,26 @@ class _BillScreenState extends ConsumerState<BillScreen> {
     final l = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final job = ref.watch(jobProvider((widget.spaceId, widget.jobId))).value;
-    final items = ref
-        .watch(jobItemsProvider((widget.spaceId, widget.jobId)))
-        .value;
-    final profile = ref.watch(businessProfileProvider(widget.spaceId)).value;
-    if (job == null || items == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+    final key = (widget.spaceId, widget.jobId);
+    final jobLoad = ref.watch(jobProvider(key));
+    final itemsLoad = ref.watch(jobItemsProvider(key));
+    final profileLoad = ref.watch(businessProfileProvider(widget.spaceId));
+    final job = jobLoad.value;
+    final items = itemsLoad.value;
+    final profile = profileLoad.value;
+    // The profile carries the tax rate, so no bill is shown without it.
+    final missing = jobLoad.hasValue && !jobLoad.isLoading && job == null;
+    if (jobLoad.failed || itemsLoad.failed || profileLoad.failed || missing) {
+      return LoadErrorScaffold(
+        onRetry: () {
+          ref.invalidate(jobProvider(key));
+          ref.invalidate(jobItemsProvider(key));
+          ref.invalidate(businessProfileProvider(widget.spaceId));
+        },
       );
+    }
+    if (job == null || items == null || !profileLoad.hasValue) {
+      return const LoadingScaffold();
     }
     final subtotal = BillMath.subtotal(items);
     final discount = math.max(0, Money.parse(_discount.text) ?? 0);

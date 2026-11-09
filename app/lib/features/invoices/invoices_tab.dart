@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
+import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../jobs/job_labels.dart';
 import 'invoice_labels.dart';
@@ -31,9 +32,8 @@ class _InvoicesTabState extends ConsumerState<InvoicesTab> {
     final scheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toString();
     final invoices = ref.watch(invoicesProvider(widget.spaceId));
-    final stats =
-        ref.watch(invoiceStatsProvider(widget.spaceId)).value ??
-        InvoiceStats.zero;
+    final statsLoad = ref.watch(invoiceStatsProvider(widget.spaceId));
+    final stats = statsLoad.value ?? InvoiceStats.zero;
     final profile = ref.watch(businessProfileProvider(widget.spaceId));
     final nudge =
         widget.manager &&
@@ -60,7 +60,12 @@ class _InvoicesTabState extends ConsumerState<InvoicesTab> {
       ),
       body: invoices.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l.errorGeneric)),
+        error: (e, _) => LoadError(
+          onRetry: () {
+            ref.invalidate(invoicesProvider(widget.spaceId));
+            ref.invalidate(invoiceStatsProvider(widget.spaceId));
+          },
+        ),
         data: (all) {
           final list = _unpaidOnly ? all.where((i) => i.isOpen).toList() : all;
           return ListView(
@@ -71,7 +76,14 @@ class _InvoicesTabState extends ConsumerState<InvoicesTab> {
               Tokens.s7 * 2,
             ),
             children: [
-              _StatsCard(stats: stats),
+              // Zero stats after a failed request would read as "no sales".
+              if (statsLoad.failed)
+                LoadError(
+                  onRetry: () =>
+                      ref.invalidate(invoiceStatsProvider(widget.spaceId)),
+                )
+              else
+                _StatsCard(stats: stats),
               if (nudge)
                 Padding(
                   padding: const EdgeInsets.only(top: Tokens.s3),
@@ -282,7 +294,9 @@ class ItemsReportScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l.itemsUsedThisMonth)),
       body: usage.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(l.errorGeneric)),
+        error: (e, _) => LoadError(
+          onRetry: () => ref.invalidate(itemsUsedProvider(spaceId)),
+        ),
         data: (list) {
           if (list.isEmpty) {
             return Center(

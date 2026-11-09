@@ -4,7 +4,9 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart' show ImperativeRouteMatch;
 
+import 'core/errors/error_reporter.dart';
 import 'core/router/app_router.dart';
 import 'core/settings/app_settings.dart';
 import 'core/theme/app_theme.dart';
@@ -27,6 +29,19 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
   @override
   void initState() {
     super.initState();
+    // Error reports say which screen was open.
+    // A screen opened with push sits on top of the base location, so the
+    // top match is the one on screen.
+    ref.read(errorReporterProvider)?.currentScreen = () {
+      final config = ref
+          .read(routerProvider)
+          .routerDelegate
+          .currentConfiguration;
+      final top = config.isEmpty ? null : config.last;
+      return top is ImperativeRouteMatch
+          ? top.matches.uri.path
+          : config.uri.path;
+    };
     // Invite links open the join screen. Auth callbacks are handled by Supabase itself.
     try {
       final appLinks = AppLinks();

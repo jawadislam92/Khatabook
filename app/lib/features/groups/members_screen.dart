@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
+import '../../core/widgets/load_error.dart';
 import '../../core/widgets/screen_scaffold.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
@@ -58,7 +59,9 @@ class MembersScreen extends ConsumerWidget {
               child: CircularProgressIndicator(),
             ),
           ),
-          error: (e, _) => Text(l.errorGeneric),
+          error: (e, _) => LoadError(
+            onRetry: () => ref.invalidate(membersProvider(spaceId)),
+          ),
           data: (list) => Column(
             children: [
               for (final m in list) ...[
