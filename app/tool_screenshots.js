@@ -53,6 +53,12 @@ async function backUntil(page, t) {
     await page.waitForTimeout(900);
   }
 }
+// Flutter only builds semantics for what is on screen, so scroll before tapping lower items.
+async function scrollDown(page, px) {
+  await page.mouse.move(206, 500);
+  await page.mouse.wheel(0, px);
+  await page.waitForTimeout(700);
+}
 async function typeInto(page, label, value) {
   await tapText(page, label);
   await page.keyboard.type(value, { delay: 20 });
@@ -182,12 +188,19 @@ async function typeInto(page, label, value) {
   await page.waitForTimeout(1200);
   await shot(page, '43-bill');
   await tapText(page, 'Other amount');
-  await page.waitForTimeout(400);
-  await page.keyboard.type('5000', { delay: 20 });
-  await page.waitForTimeout(400);
-  await tapText(page, 'EasyPaisa');
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(600);
+  await typeInto(page, 'Received', '5000');
+  await page.waitForTimeout(600);
   await shot(page, '44-bill-received');
+  try {
+    await scrollDown(page, 500);
+    await tapText(page, 'EasyPaisa');
+    await page.waitForTimeout(400);
+    await shot(page, '44b-bill-method');
+  } catch (e) {
+    console.log('method step skipped:', e.message);
+    await shot(page, '44b-debug');
+  }
   await tapText(page, 'Issue the bill');
   await page.waitForTimeout(800);
   await shot(page, '45-bill-confirm');
@@ -198,8 +211,9 @@ async function typeInto(page, label, value) {
   await page.waitForTimeout(900);
   await shot(page, '47-record-payment');
   await page.keyboard.press('Escape'); await page.waitForTimeout(600);
-  await page.goBack(); await page.waitForTimeout(900);
-  await backUntil(page, 'Today');
+  await backUntil(page, 'Ahmed CCTV');
+  await tapText(page, 'Ahmed CCTV');
+  await page.waitForTimeout(1200);
   await tapText(page, 'Bills');
   await page.waitForTimeout(1000);
   await shot(page, '48-bills-tab');

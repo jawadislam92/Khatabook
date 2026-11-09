@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../core/utils/money.dart';
+import '../../core/utils/pdf_fonts.dart';
 import 'invoice_models.dart';
 
 /// Labels the bill needs, passed in so the PDF follows the app language.
@@ -78,17 +78,8 @@ class InvoicePdf {
     required InvoicePdfLabels labels,
     required bool rtl,
   }) async {
-    final urdu = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/NotoNastaliqUrdu-Regular.ttf'),
-    );
-    final urduBold = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/NotoNastaliqUrdu-Bold.ttf'),
-    );
-    final theme = pw.ThemeData.withFont(
-      base: pw.Font.helvetica(),
-      bold: pw.Font.helveticaBold(),
-      fontFallback: [urdu, urduBold],
-    );
+    final f = await PdfFonts.load();
+    final theme = f.theme(rtl: rtl);
     final dir = rtl ? pw.TextDirection.rtl : pw.TextDirection.ltr;
     final date = DateFormat('d MMM yyyy');
     final name = profile?.nameEn.trim().isNotEmpty ?? false
@@ -103,7 +94,7 @@ class InvoicePdf {
     }) => pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(
+        f.text(
           label,
           style: pw.TextStyle(
             fontSize: bold ? 12 : 10,
@@ -111,7 +102,7 @@ class InvoicePdf {
             color: color ?? PdfColors.grey800,
           ),
         ),
-        pw.Text(
+        f.text(
           'Rs ${Money.format(paisa)}',
           style: pw.TextStyle(
             fontSize: bold ? 13 : 10,
@@ -122,11 +113,12 @@ class InvoicePdf {
       ],
     );
 
-    final rows = <List<String>>[
+    const cellStyle = pw.TextStyle(fontSize: 10);
+    final rows = <List<dynamic>>[
       for (var i = 0; i < invoice.lines.length; i++)
         [
           '${i + 1}',
-          invoice.lines[i].description,
+          f.text(invoice.lines[i].description, style: cellStyle),
           '${formatQty(invoice.lines[i].qty)}${invoice.lines[i].unit == null ? '' : ' ${invoice.lines[i].unit}'}',
           Money.format(invoice.lines[i].unitPricePaisa),
           Money.format(invoice.lines[i].amountPaisa),
@@ -146,6 +138,11 @@ class InvoicePdf {
         [labels.jazzcash, profile!.jazzcash!],
     ];
 
+    final headerStyle = pw.TextStyle(
+      fontWeight: pw.FontWeight.bold,
+      color: PdfColors.white,
+      fontSize: 10,
+    );
     final doc = pw.Document(
       theme: theme,
       title: '${labels.invoice} ${invoice.number}',
@@ -163,11 +160,11 @@ class InvoicePdf {
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text(
+                f.text(
                   labels.thanks,
                   style: pw.TextStyle(fontSize: 9, color: _teal),
                 ),
-                pw.Text(
+                f.text(
                   '${labels.madeWith}  ·  ${ctx.pageNumber}/${ctx.pagesCount}',
                   style: const pw.TextStyle(
                     fontSize: 8,
@@ -187,7 +184,7 @@ class InvoicePdf {
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text(
+                    f.text(
                       name,
                       style: pw.TextStyle(
                         fontSize: 20,
@@ -196,13 +193,12 @@ class InvoicePdf {
                       ),
                     ),
                     if (profile?.nameUr?.isNotEmpty ?? false)
-                      pw.Text(
+                      f.text(
                         profile!.nameUr!,
-                        textDirection: pw.TextDirection.rtl,
                         style: pw.TextStyle(fontSize: 13, color: _teal),
                       ),
                     if (profile?.tagline?.isNotEmpty ?? false)
-                      pw.Text(
+                      f.text(
                         profile!.tagline!,
                         style: const pw.TextStyle(
                           fontSize: 9,
@@ -216,7 +212,7 @@ class InvoicePdf {
                       profile?.email,
                     ])
                       if (line?.isNotEmpty ?? false)
-                        pw.Text(
+                        f.text(
                           line!,
                           style: const pw.TextStyle(
                             fontSize: 9,
@@ -229,7 +225,7 @@ class InvoicePdf {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
-                  pw.Text(
+                  f.text(
                     labels.invoice,
                     style: pw.TextStyle(
                       fontSize: 22,
@@ -238,14 +234,14 @@ class InvoicePdf {
                       letterSpacing: 1.5,
                     ),
                   ),
-                  pw.Text(
+                  f.text(
                     invoice.number,
                     style: pw.TextStyle(
                       fontSize: 12,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
-                  pw.Text(
+                  f.text(
                     date.format(invoice.issuedAt),
                     style: const pw.TextStyle(
                       fontSize: 10,
@@ -266,7 +262,7 @@ class InvoicePdf {
                         ),
                         borderRadius: pw.BorderRadius.circular(4),
                       ),
-                      child: pw.Text(
+                      child: f.text(
                         invoice.isPaid
                             ? labels.paidStamp
                             : labels.cancelledStamp,
@@ -293,7 +289,7 @@ class InvoicePdf {
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text(
+                    f.text(
                       labels.billTo.toUpperCase(),
                       style: pw.TextStyle(
                         fontSize: 8,
@@ -302,7 +298,7 @@ class InvoicePdf {
                       ),
                     ),
                     pw.SizedBox(height: 2),
-                    pw.Text(
+                    f.text(
                       invoice.customerName,
                       style: pw.TextStyle(
                         fontSize: 13,
@@ -310,12 +306,12 @@ class InvoicePdf {
                       ),
                     ),
                     if (invoice.customerPhone?.isNotEmpty ?? false)
-                      pw.Text(
+                      f.text(
                         invoice.customerPhone!,
                         style: const pw.TextStyle(fontSize: 10),
                       ),
                     if (invoice.customerAddress?.isNotEmpty ?? false)
-                      pw.Text(
+                      f.text(
                         invoice.customerAddress!,
                         style: const pw.TextStyle(fontSize: 10),
                       ),
@@ -327,7 +323,7 @@ class InvoicePdf {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text(
+                      f.text(
                         labels.job.toUpperCase(),
                         style: pw.TextStyle(
                           fontSize: 8,
@@ -336,7 +332,7 @@ class InvoicePdf {
                         ),
                       ),
                       pw.SizedBox(height: 2),
-                      pw.Text(
+                      f.text(
                         invoice.jobTitle!,
                         style: const pw.TextStyle(fontSize: 11),
                       ),
@@ -348,20 +344,19 @@ class InvoicePdf {
           pw.SizedBox(height: 16),
           pw.TableHelper.fromTextArray(
             headers: [
-              '#',
-              labels.description,
-              labels.qty,
-              labels.rate,
-              labels.amount,
+              for (final h in [
+                '#',
+                labels.description,
+                labels.qty,
+                labels.rate,
+                labels.amount,
+              ])
+                f.text(h, style: headerStyle),
             ],
             data: rows,
-            headerStyle: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.white,
-              fontSize: 10,
-            ),
+            headerStyle: headerStyle,
             headerDecoration: pw.BoxDecoration(color: _navy),
-            cellStyle: const pw.TextStyle(fontSize: 10),
+            cellStyle: cellStyle,
             cellAlignments: {
               0: pw.Alignment.center,
               1: pw.Alignment.centerLeft,
@@ -387,7 +382,7 @@ class InvoicePdf {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     if (livePayments.isNotEmpty) ...[
-                      pw.Text(
+                      f.text(
                         labels.payments.toUpperCase(),
                         style: pw.TextStyle(
                           fontSize: 8,
@@ -397,14 +392,14 @@ class InvoicePdf {
                       ),
                       pw.SizedBox(height: 3),
                       for (final p in livePayments)
-                        pw.Text(
+                        f.text(
                           '${date.format(p.paidAt)}  ·  ${labels.methodLabel(p.method)}  ·  Rs ${Money.format(p.amountPaisa)}',
                           style: const pw.TextStyle(fontSize: 9),
                         ),
                       pw.SizedBox(height: 10),
                     ],
                     if (payTo.isNotEmpty && invoice.balancePaisa > 0) ...[
-                      pw.Text(
+                      f.text(
                         labels.payTo.toUpperCase(),
                         style: pw.TextStyle(
                           fontSize: 8,
@@ -414,7 +409,7 @@ class InvoicePdf {
                       ),
                       pw.SizedBox(height: 3),
                       for (final kv in payTo)
-                        pw.Text(
+                        f.text(
                           '${kv[0]}: ${kv[1]}',
                           style: const pw.TextStyle(fontSize: 9),
                         ),
@@ -472,11 +467,11 @@ class InvoicePdf {
           ),
           if (invoice.notes?.isNotEmpty ?? false) ...[
             pw.SizedBox(height: 14),
-            pw.Text(invoice.notes!, style: const pw.TextStyle(fontSize: 9)),
+            f.text(invoice.notes!, style: const pw.TextStyle(fontSize: 9)),
           ],
           if (invoice.termsText?.isNotEmpty ?? false) ...[
             pw.SizedBox(height: 14),
-            pw.Text(
+            f.text(
               invoice.termsText!,
               style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
             ),

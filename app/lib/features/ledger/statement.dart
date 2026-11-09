@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../core/utils/money.dart';
+import '../../core/utils/pdf_fonts.dart';
 import 'ledger_models.dart';
 
 /// Labels the statement needs, passed in so the PDF follows the app language.
@@ -53,19 +53,8 @@ class Statement {
     required String spaceName,
     required bool rtl,
   }) async {
-    final urdu = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/NotoNastaliqUrdu-Regular.ttf'),
-    );
-    final urduBold = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/NotoNastaliqUrdu-Bold.ttf'),
-    );
-    final base = pw.Font.helvetica();
-    final bold = pw.Font.helveticaBold();
-    final theme = pw.ThemeData.withFont(
-      base: base,
-      bold: bold,
-      fontFallback: [urdu, urduBold],
-    );
+    final f = await PdfFonts.load();
+    final theme = f.theme(rtl: rtl);
     final dir = rtl ? pw.TextDirection.rtl : pw.TextDirection.ltr;
 
     final ordered = entries.where((e) => !e.isVoided || true).toList()
@@ -76,7 +65,8 @@ class Statement {
     var running = 0;
     var totalGave = 0;
     var totalGot = 0;
-    final rows = <List<String>>[];
+    const cellStyle = pw.TextStyle(fontSize: 10);
+    final rows = <List<dynamic>>[];
     for (final e in ordered) {
       running += e.signedPaisa;
       if (e.direction == EntryDirection.gave) {
@@ -86,7 +76,10 @@ class Statement {
       }
       rows.add([
         DateFormat('d MMM yyyy').format(e.entryDate),
-        [if (e.isVoided) '[${labels.cancelled}] ', e.note ?? ''].join(),
+        f.text(
+          [if (e.isVoided) '[${labels.cancelled}] ', e.note ?? ''].join(),
+          style: cellStyle,
+        ),
         e.direction == EntryDirection.gave ? Money.format(e.amountPaisa) : '',
         e.direction == EntryDirection.got ? Money.format(e.amountPaisa) : '',
         _signed(running),
@@ -111,7 +104,7 @@ class Statement {
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text(
+                f.text(
                   labels.title,
                   style: pw.TextStyle(
                     fontSize: 20,
@@ -119,7 +112,7 @@ class Statement {
                     color: PdfColor.fromHex('#0E8C7F'),
                   ),
                 ),
-                pw.Text(
+                f.text(
                   spaceName,
                   style: const pw.TextStyle(
                     fontSize: 11,
@@ -129,12 +122,12 @@ class Statement {
               ],
             ),
             pw.SizedBox(height: 6),
-            pw.Text(
+            f.text(
               party.name,
               style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold),
             ),
             if (party.phone != null)
-              pw.Text(
+              f.text(
                 party.phone!,
                 style: const pw.TextStyle(
                   fontSize: 11,
@@ -149,11 +142,11 @@ class Statement {
         footer: (ctx) => pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text(
+            f.text(
               labels.generated,
               style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
-            pw.Text(
+            f.text(
               '${ctx.pageNumber} / ${ctx.pagesCount}',
               style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
@@ -162,11 +155,21 @@ class Statement {
         build: (ctx) => [
           pw.TableHelper.fromTextArray(
             headers: [
-              labels.date,
-              labels.note,
-              labels.gave,
-              labels.got,
-              labels.balance,
+              for (final h in [
+                labels.date,
+                labels.note,
+                labels.gave,
+                labels.got,
+                labels.balance,
+              ])
+                f.text(
+                  h,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.white,
+                    fontSize: 10,
+                  ),
+                ),
             ],
             data: rows,
             headerStyle: pw.TextStyle(
@@ -177,7 +180,7 @@ class Statement {
             headerDecoration: pw.BoxDecoration(
               color: PdfColor.fromHex('#213A5C'),
             ),
-            cellStyle: const pw.TextStyle(fontSize: 10),
+            cellStyle: cellStyle,
             cellAlignments: {
               0: pw.Alignment.centerLeft,
               1: pw.Alignment.centerLeft,
@@ -204,16 +207,16 @@ class Statement {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(
+                f.text(
                   '${labels.totalGave}: Rs ${Money.format(totalGave)}',
                   style: const pw.TextStyle(fontSize: 11),
                 ),
-                pw.Text(
+                f.text(
                   '${labels.totalGot}: Rs ${Money.format(totalGot)}',
                   style: const pw.TextStyle(fontSize: 11),
                 ),
                 pw.SizedBox(height: 4),
-                pw.Text(
+                f.text(
                   closingText,
                   style: pw.TextStyle(
                     fontSize: 13,

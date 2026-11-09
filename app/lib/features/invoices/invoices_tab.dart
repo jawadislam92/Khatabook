@@ -142,28 +142,30 @@ class _InvoicesTabState extends ConsumerState<InvoicesTab> {
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     subtitle: Text(
-                      '${inv.number}  ·  ${DateFormat.MMMd(locale).format(inv.issuedAt)}',
+                      '${inv.number}  ·  ${DateFormat.MMMd(locale).format(inv.issuedAt)}  ·  Rs ${Money.format(inv.totalPaisa)}',
+                      style: const TextStyle(fontFamily: 'Roboto'),
                     ),
                     trailing: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Rs ${Money.format(inv.totalPaisa)}',
+                          inv.isOpen
+                              ? 'Rs ${Money.format(inv.balancePaisa)}'
+                              : invoiceStatusLabel(l, inv.status),
                           style: text.titleMedium?.copyWith(
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          inv.isOpen
-                              ? '${l.balanceDue} Rs ${Money.format(inv.balancePaisa)}'
-                              : invoiceStatusLabel(l, inv.status),
-                          style: text.bodySmall?.copyWith(
                             color: invoiceStatusColor(inv.status),
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
+                        if (inv.isOpen)
+                          Text(
+                            l.balanceDue,
+                            style: text.bodySmall?.copyWith(
+                              color: invoiceStatusColor(inv.status),
+                            ),
+                          ),
                       ],
                     ),
                   ),

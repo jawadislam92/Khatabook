@@ -40,6 +40,10 @@ flutter:
   generate: true
   assets:
     - assets/fonts/OFL.txt
+    - assets/fonts/Roboto-Regular.ttf
+    - assets/fonts/Roboto-Bold.ttf
+    - assets/fonts/NotoNaskhArabic-Regular.ttf
+    - assets/fonts/NotoNaskhArabic-Bold.ttf
   fonts:
     - family: NotoNastaliqUrdu
       fonts:

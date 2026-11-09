@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -64,14 +66,14 @@ class _BillScreenState extends ConsumerState<BillScreen> {
       );
     }
     final subtotal = BillMath.subtotal(items);
-    final discount = (Money.parse(_discount.text) ?? 0).clamp(0, 1 << 62);
+    final discount = math.max(0, Money.parse(_discount.text) ?? 0);
     final discountBad = discount > subtotal;
     final tax = BillMath.tax(subtotal, discountBad ? 0 : discount, profile);
     final total = subtotal - (discountBad ? 0 : discount) + tax;
     final received = switch (_mode) {
       _Received.none => 0,
       _Received.full => total,
-      _Received.other => (Money.parse(_received.text) ?? 0).clamp(0, 1 << 62),
+      _Received.other => math.max(0, Money.parse(_received.text) ?? 0),
     };
     final receivedBad = received > total;
     final balance = receivedBad ? total : total - received;
