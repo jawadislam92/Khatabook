@@ -25,3 +25,4 @@ app/*.iml
 *.log
 app/lib/l10n/app_localizations*.dart
 app/.flutter-plugins-dependencies
+*.apk

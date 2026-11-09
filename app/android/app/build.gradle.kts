@@ -35,7 +35,7 @@ android {
     defaultConfig {
         applicationId = "com.sparkingasia.duebook"
         // Android 6 and up. Needed for the biometric prompt and encrypted storage.
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

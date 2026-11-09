@@ -50,3 +50,22 @@ test/                      unit and widget tests
 - Package name `com.sparkingasia.duebook`. Change it in `android/app/build.gradle.kts`, the manifest intent filter, `AppConfig.authRedirect` and the Supabase redirect list together.
 - Release signing reads `android/key.properties`, which CI creates from secrets. It is never committed.
 - Release builds are minified and obfuscated. Cloud backup of app data is turned off.
+
+## Building the APK on the cloud machine
+
+Android SDK command line tools install under the session scratchpad and Flutter is pointed at them with `flutter config --android-sdk`. Maven Central rate limits that network, so `~/.gradle/init.d/maven-mirror.gradle` redirects it to Google's mirror (`maven-central.storage-download.googleapis.com`). GitHub Actions does not need the mirror.
+
+Two useful builds:
+
+```
+# preview, no server, sample data
+flutter build apk --debug
+
+# connected to the dev project, push enabled (needs android/app/google-services.json)
+flutter build apk --release \
+  --dart-define=SUPABASE_URL=https://jepcsftdjejjzhfjnavy.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=sb_publishable_oTLjMBC0q95QkO2UrJEaSg_-IkMyi0C \
+  --dart-define=FIREBASE_ENABLED=true
+```
+
+Without `android/key.properties` the release build is signed with the debug key, which is fine for testing and wrong for the Play Store.
