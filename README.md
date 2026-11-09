@@ -9,6 +9,8 @@ One mobile app with two uses:
 
 | Document | What it covers |
 |---|---|
+| [docs/HANDOFF.md](docs/HANDOFF.md) | Start here to continue the work: environments, what is live, pending fixes, how to build, test and deploy |
+| [docs/CHAT_LOG.md](docs/CHAT_LOG.md) | Condensed record of the conversation that built the project |
 | [docs/PLAN.md](docs/PLAN.md) | Who uses the app, every feature, screens, step by step flows, build phases, decisions needed |
 | [docs/TECHNICAL.md](docs/TECHNICAL.md) | Tech stack, architecture, database design, security plan, notification engine, offline support, testing, costs |
 | [docs/SETUP_CHECKLIST.md](docs/SETUP_CHECKLIST.md) | Accounts, secrets and content the owner provides, and where each goes |
