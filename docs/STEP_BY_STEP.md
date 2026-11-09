@@ -85,7 +85,7 @@ It asks for a password and some names. Then:
 
 1. Save `khatabook-upload.jks` and the password in your password manager and on a USB drive. Losing it means you cannot update the app on the Play Store.
 2. Make the file into text: on Mac or Linux run `base64 -w0 khatabook-upload.jks` (on Mac just `base64 -i khatabook-upload.jks`), on Windows PowerShell run `[Convert]::ToBase64String([IO.File]::ReadAllBytes("khatabook-upload.jks"))`. Copy the output.
-3. Add GitHub secrets: `ANDROID_KEYSTORE_BASE64` (the text from step 2), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (the word `upload`), `ANDROID_KEY_PASSWORD` (same as the keystore password unless you chose another).
+3. Add GitHub **repository** secrets (GitHub repo, Settings, Secrets and variables, Actions, Repository secrets, New repository secret. Not Environment secrets, not Variables, not Dependabot or Codespaces secrets): `ANDROID_KEYSTORE_BASE64` (the text from step 2), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (the word `upload`), `ANDROID_KEY_PASSWORD` (same as the keystore password unless you chose another).
 
 ## Step 8. Google Play Console (at release, USD 25 once)
 

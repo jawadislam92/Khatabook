@@ -10,7 +10,6 @@ jobs:
   android:
     name: Signed Android build
     runs-on: ubuntu-24.04
-    environment: production
     defaults:
       run:
         working-directory: app
