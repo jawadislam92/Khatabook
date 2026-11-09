@@ -97,6 +97,33 @@ It asks for a password and some names. Then:
 
 Pick a subdomain such as `app.yourdomain.com` and tell me who can add one DNS record when we get there.
 
+## Step 10. Optional: Google sign in (15 minutes, free)
+
+Email and password already work. This adds the **Continue with Google** button. The app opens the phone's browser, Google confirms the account, and Supabase hands the session back to the app through the link `com.sparkingasia.duebook://login-callback`. One Google client serves both Supabase projects.
+
+**Part A. Google Cloud, once**
+
+1. Go to console.cloud.google.com and pick the project Firebase made, **duebook-1acb5** (project picker at the top).
+2. Left menu, **APIs and Services**, **OAuth consent screen** (Google now calls this page **Google Auth Platform**, **Branding**). App name `Duebook`, user support email and developer contact email: yours. Save.
+3. On **Audience**, set the app to **External** and press **Publish app**. If it stays in Testing, only people typed into the test user list can sign in, which is not what you want for the team. Basic sign in only asks for name and email, so no Google review is needed.
+4. **Credentials**, **Create credentials**, **OAuth client ID**. Application type **Web application** (yes, web, even though it is an Android app: the browser does the sign in). Name `Duebook Supabase`.
+5. Under **Authorised redirect URIs** add both lines, exactly:
+   - `https://jepcsftdjejjzhfjnavy.supabase.co/auth/v1/callback`
+   - `https://ohrnkvzemgfrxcuknamh.supabase.co/auth/v1/callback`
+6. Press **Create**. Copy the **Client ID** and the **Client secret**. Keep the window open, you need them twice.
+
+**Part B. Supabase, on dev and again on prod**
+
+7. Open the project, **Authentication**, **Sign In / Providers**, find **Google**, switch it on, paste the Client ID and Client secret, save.
+8. Still under Authentication, open **URL Configuration**. Under **Redirect URLs** press **Add URL** and enter `com.sparkingasia.duebook://login-callback`. Save. Without this line Supabase sends the signed in user to the website address instead of back into the app, and the button appears to do nothing.
+9. Repeat 7 and 8 on the other project.
+
+**Part C. Try it**
+
+10. In the app tap **Continue with Google**. The browser opens, you pick the account, and the app comes back signed in. The first time, Google shows a short consent page with the app name from step 2.
+
+Nothing to send me. The client secret stays in Google and Supabase only.
+
 ---
 
 ## What happens on my side after each step
@@ -110,3 +137,4 @@ Pick a subdomain such as `app.yourdomain.com` and tell me who can add one DNS re
 | Step 5 | Invoice template with your branding and the real item catalog |
 | Step 6 | First APK on the Play internal testing track |
 | Step 7 | Signed release builds from tags |
+| Step 10 | Check Google sign in on both projects from the app |
