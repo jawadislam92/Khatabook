@@ -8,6 +8,7 @@ import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
 import '../../core/widgets/load_error.dart';
+import '../../core/utils/dates.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
 import '../groups/groups_repository.dart';
@@ -218,7 +219,7 @@ class JobDetailScreen extends ConsumerWidget {
                     const SizedBox(width: Tokens.s2),
                     Expanded(
                       child: Text(
-                        '${DateFormat.yMMMEd(locale).format(job.scheduledAt)}  ${DateFormat.jm(locale).format(job.scheduledAt)}',
+                        '${DateFormat.yMMMEd(locale).format(job.scheduledAt)}  ${clockTime(context, job.scheduledAt)}',
                         style: text.titleMedium?.copyWith(
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w700,
@@ -501,7 +502,7 @@ class _InvoiceCard extends ConsumerWidget {
           subtitle: Text(
             inv.isOpen
                 ? '${l.balanceDue} Rs ${Money.format(inv.balancePaisa)}'
-                : invoiceStatusLabel(l, inv.status),
+                : invoiceStatusLabel(l, inv),
             style: TextStyle(color: color, fontWeight: FontWeight.w700),
           ),
           trailing: const Icon(Icons.chevron_right),

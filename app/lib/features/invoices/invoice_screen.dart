@@ -164,7 +164,7 @@ class InvoiceScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        invoiceStatusLabel(l, inv.status),
+                        invoiceStatusLabel(l, inv),
                         style: text.labelLarge?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,

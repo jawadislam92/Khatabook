@@ -64,6 +64,13 @@ Future<Party?> showPartyForm(
                 if (!key.currentState!.validate()) return;
                 final repo = ref.read(ledgerRepositoryProvider);
                 final p = phone.text.trim().isEmpty ? null : phone.text.trim();
+                if (existing == null) {
+                  final same = await _samePerson(repo, spaceId, name.text, p);
+                  if (!ctx.mounted) return;
+                  if (same != null && !await _confirmDuplicate(ctx, l, same)) {
+                    return;
+                  }
+                }
                 final saved = existing == null
                     ? await repo.addParty(spaceId, name: name.text, phone: p)
                     : await repo.updateParty(
@@ -79,3 +86,54 @@ Future<Party?> showPartyForm(
     ),
   );
 }
+
+/// Someone already in this book with the same name or phone number, or
+/// null. A failed lookup returns null, so saving still works offline.
+Future<Party?> _samePerson(
+  LedgerRepository repo,
+  String spaceId,
+  String name,
+  String? phone,
+) async {
+  try {
+    final digits = phone?.replaceAll(RegExp(r'\D'), '') ?? '';
+    final wanted = name.trim().toLowerCase();
+    for (final pb in await repo.partiesWithBalances(spaceId)) {
+      final other = pb.party;
+      final otherDigits = other.phone?.replaceAll(RegExp(r'\D'), '') ?? '';
+      if (other.name.trim().toLowerCase() == wanted ||
+          (digits.length >= 7 && digits == otherDigits)) {
+        return other;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+Future<bool> _confirmDuplicate(
+  BuildContext context,
+  AppLocalizations l,
+  Party same,
+) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.duplicatePersonTitle),
+        content: Text(
+          l.duplicatePersonBody(
+            same.phone == null ? same.name : '${same.name} (${same.phone})',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.addAnyway),
+          ),
+        ],
+      ),
+    ) ??
+    false;

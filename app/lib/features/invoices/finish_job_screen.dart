@@ -100,6 +100,8 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
       }
     });
     _search.clear();
+    // Close the keyboard so it does not cover "Next: make the bill".
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   void _setQty(JobItem line, double qty) {

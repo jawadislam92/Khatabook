@@ -20,11 +20,15 @@ IconData methodIcon(PaymentMethod m) => switch (m) {
   PaymentMethod.other => Icons.more_horiz,
 };
 
-String invoiceStatusLabel(AppLocalizations l, InvoiceStatus s) => switch (s) {
-  InvoiceStatus.issued => l.invoiceStatusIssued,
-  InvoiceStatus.paid => l.invoiceStatusPaid,
-  InvoiceStatus.voided => l.invoiceStatusVoid,
-};
+/// A bill that is still open but has some money in says "Part paid".
+String invoiceStatusLabel(AppLocalizations l, Invoice inv) =>
+    switch (inv.status) {
+      InvoiceStatus.issued when inv.receivedPaisa > 0 =>
+        l.invoiceStatusPartPaid,
+      InvoiceStatus.issued => l.invoiceStatusIssued,
+      InvoiceStatus.paid => l.invoiceStatusPaid,
+      InvoiceStatus.voided => l.invoiceStatusVoid,
+    };
 
 Color invoiceStatusColor(InvoiceStatus s) => switch (s) {
   InvoiceStatus.issued => Tokens.saffronDeep,

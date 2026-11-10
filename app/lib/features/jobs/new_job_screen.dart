@@ -7,6 +7,7 @@ import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/big_button.dart';
 import '../../core/widgets/load_error.dart';
+import '../../core/utils/dates.dart';
 import '../../l10n/app_localizations.dart';
 import '../groups/groups_repository.dart';
 import '../ledger/ledger_repository.dart';
@@ -144,7 +145,7 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.access_time),
-                  label: Text(DateFormat.jm(locale).format(_when)),
+                  label: Text(clockTime(context, _when)),
                   onPressed: () async {
                     final t = await showTimePicker(
                       context: context,
@@ -262,7 +263,17 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
               ListTile(
                 leading: CircleAvatar(child: Text(pb.party.initials)),
                 title: Text(pb.party.name),
-                subtitle: pb.party.phone == null ? null : Text(pb.party.phone!),
+                subtitle: Text(
+                  [
+                    if (pb.party.phone != null) pb.party.phone!,
+                    if (pb.balancePaisa > 0)
+                      '${l.youWillGet} Rs ${Money.format(pb.balancePaisa)}',
+                    if (pb.balancePaisa < 0)
+                      '${l.youWillGive} Rs ${Money.format(-pb.balancePaisa)}',
+                    if (pb.party.phone == null && pb.balancePaisa == 0)
+                      l.settled,
+                  ].join('  ·  '),
+                ),
                 onTap: () => Navigator.pop(ctx, pb.party.id),
               ),
           ],

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/utils/dates.dart';
+import '../../core/utils/money.dart';
 import '../../core/widgets/load_error.dart';
 import '../../core/widgets/money_text.dart';
 import '../../l10n/app_localizations.dart';
@@ -624,7 +625,7 @@ class _ByMember extends ConsumerWidget {
                           ),
                           Flexible(
                             child: Text(
-                              ' ${m.gavePaisa ~/ 100}  ',
+                              ' Rs ${Money.format(m.gavePaisa)}  ',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: text.labelMedium?.copyWith(
@@ -639,7 +640,7 @@ class _ByMember extends ConsumerWidget {
                           ),
                           Flexible(
                             child: Text(
-                              ' ${m.gotPaisa ~/ 100}',
+                              ' Rs ${Money.format(m.gotPaisa)}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: text.labelMedium?.copyWith(

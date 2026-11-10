@@ -164,7 +164,7 @@ class _InvoicesTabState extends ConsumerState<InvoicesTab> {
                         Text(
                           inv.isOpen
                               ? 'Rs ${Money.format(inv.balancePaisa)}'
-                              : invoiceStatusLabel(l, inv.status),
+                              : invoiceStatusLabel(l, inv),
                           style: text.titleMedium?.copyWith(
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w800,

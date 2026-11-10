@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/tokens.dart';
+import '../../core/utils/dates.dart';
 import '../../l10n/app_localizations.dart';
 import 'job_labels.dart';
 import 'jobs_models.dart';
@@ -31,7 +32,7 @@ class JobCard extends StatelessWidget {
         job.scheduledAt.isBefore(
           DateTime.now().subtract(const Duration(minutes: 30)),
         );
-    final time = DateFormat.jm(locale).format(job.scheduledAt);
+    final time = clockTime(context, job.scheduledAt);
     final date = DateFormat.MMMEd(locale).format(job.scheduledAt);
     final who = job.assignees.map((a) => a.name).join(', ');
     return Card(

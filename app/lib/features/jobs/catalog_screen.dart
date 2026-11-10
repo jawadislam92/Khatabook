@@ -150,7 +150,8 @@ class CatalogScreen extends ConsumerWidget {
     );
     var unit = existing?.unit ?? 'pc';
     var category = existing?.category ?? 'camera';
-    var fav = existing?.isFavourite ?? false;
+    // New items show as a quick tile, so they are one tap away on Items used.
+    var fav = existing?.isFavourite ?? true;
     var edit = existing?.allowPriceEdit ?? false;
     var active = existing?.active ?? true;
     final space = ref
