@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/tokens.dart';
+import '../contacts/contact_picker.dart';
+import '../contacts/contacts_source.dart';
 import '../../l10n/app_localizations.dart';
 import 'ledger_models.dart';
 import 'ledger_repository.dart';
@@ -41,6 +43,19 @@ Future<Party?> showPartyForm(
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: Tokens.s4),
+            if (existing == null) ...[
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final c = await pickContact(ctx, ref);
+                  if (c == null) return;
+                  name.text = c.name;
+                  phone.text = c.phone ?? '';
+                },
+                icon: const Icon(Icons.contacts_rounded),
+                label: Text(l.contactsPick),
+              ),
+              const SizedBox(height: Tokens.s3),
+            ],
             TextFormField(
               controller: name,
               autofocus: true,
@@ -49,6 +64,7 @@ Future<Party?> showPartyForm(
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? l.errorNameRequired : null,
             ),
+            if (existing == null) _Suggestions(name: name, phone: phone),
             const SizedBox(height: Tokens.s3),
             TextFormField(
               controller: phone,
@@ -137,3 +153,49 @@ Future<bool> _confirmDuplicate(
       ),
     ) ??
     false;
+
+/// While a new name is typed, shows up to three matching contacts from the
+/// phone (or the chosen contacts file). A tap fills name and number.
+class _Suggestions extends ConsumerWidget {
+  const _Suggestions({required this.name, required this.phone});
+  final TextEditingController name;
+  final TextEditingController phone;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final all = ref.watch(knownContactsProvider).value ?? const [];
+    if (all.isEmpty) return const SizedBox.shrink();
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: name,
+      builder: (context, v, _) {
+        final q = v.text.trim();
+        if (q.length < 2) return const SizedBox.shrink();
+        final hits = matchContacts(all, q)
+            .where((c) => c.name != q || (c.phone ?? '') != phone.text)
+            .take(3)
+            .toList();
+        if (hits.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: Tokens.s2),
+          child: Wrap(
+            spacing: Tokens.s2,
+            runSpacing: Tokens.s1,
+            children: [
+              for (final c in hits)
+                ActionChip(
+                  avatar: const Icon(Icons.person_outline, size: 18),
+                  label: Text(
+                    c.phone == null ? c.name : '${c.name}  ${c.phone}',
+                  ),
+                  onPressed: () {
+                    name.text = c.name;
+                    phone.text = c.phone ?? '';
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

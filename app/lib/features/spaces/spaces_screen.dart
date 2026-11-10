@@ -137,57 +137,16 @@ class SpacesScreen extends ConsumerWidget {
   }
 
   Future<void> _createGroup(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    var business = false;
-    final created = await showDialog<bool>(
+    final made = await showDialog<({String name, bool business})>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: Text(l.newGroupTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  labelText: l.groupName,
-                  helperText: l.newGroupHint,
-                ),
-              ),
-              const SizedBox(height: Tokens.s3),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l.thisIsBusiness),
-                subtitle: Text(l.thisIsBusinessHint),
-                value: business,
-                onChanged: (v) => setState(() => business = v),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l.cancel),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(ctx, controller.text.trim().isNotEmpty),
-              child: Text(l.create),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => const _NewBookDialog(),
     );
-    if (created == true) {
+    if (made != null) {
       await ref
           .read(spacesRepositoryProvider)
-          .createGroup(controller.text, business: business);
+          .createGroup(made.name, business: made.business);
       ref.invalidate(mySpacesProvider);
     }
-    controller.dispose();
   }
 }
 
@@ -327,25 +286,18 @@ class _SpaceTile extends StatelessWidget {
       space.kind,
       space.businessEnabled,
     )) {
-      (SpaceKind.personal, _) => (
-        Icons.person_rounded,
-        l.spaceKindPersonal,
-        Tokens.personalHue,
-      ),
-      (SpaceKind.group, true) => (
+      (_, true) => (
         Icons.storefront_rounded,
         l.spaceKindBusiness,
         Tokens.businessHue,
       ),
-      (SpaceKind.group, false) => (
+      (_, false) => (
         Icons.family_restroom_rounded,
         l.spaceKindFamily,
         Tokens.familyHue,
       ),
     };
-    final name = space.kind == SpaceKind.personal
-        ? l.spacePersonal
-        : space.name;
+    final name = space.name;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(Tokens.radius),
@@ -401,13 +353,12 @@ class _SpaceTile extends StatelessWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           _Chip(label: kindLabel, color: hue),
-                          if (space.kind != SpaceKind.personal)
-                            Text(
-                              l.membersCount(space.memberCount),
-                              style: text.bodyMedium?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
+                          Text(
+                            l.membersCount(space.memberCount),
+                            style: text.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
                             ),
+                          ),
                         ],
                       ),
                     ],
@@ -450,6 +401,159 @@ class _Chip extends StatelessWidget {
           fontWeight: FontWeight.w700,
         ),
       ),
+    );
+  }
+}
+
+/// One of the two kinds of book, picked with a tap. The picked one has a
+/// coloured border and a filled tick so the choice is plain to see.
+class _KindChoice extends StatelessWidget {
+  const _KindChoice({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String hint;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? color.withValues(alpha: 0.10) : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Tokens.radius),
+          side: BorderSide(
+            color: selected ? color : scheme.outline,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(Tokens.radius),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(Tokens.s3),
+            child: Row(
+              children: [
+                Icon(icon, color: color),
+                const SizedBox(width: Tokens.s3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(hint, style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: selected ? color : scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Name and kind for a new book. Owns its text box so it is only thrown
+/// away after the dialog has finished closing.
+class _NewBookDialog extends StatefulWidget {
+  const _NewBookDialog();
+
+  @override
+  State<_NewBookDialog> createState() => _NewBookDialogState();
+}
+
+class _NewBookDialogState extends State<_NewBookDialog> {
+  final _name = TextEditingController();
+  var _business = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l.newGroupTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _name,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: l.groupName,
+              helperText: l.newGroupHint,
+            ),
+          ),
+          const SizedBox(height: Tokens.s3),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              l.bookKindQuestion,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          const SizedBox(height: Tokens.s2),
+          _KindChoice(
+            icon: Icons.family_restroom_rounded,
+            color: Tokens.familyHue,
+            title: l.bookKindFamily,
+            hint: l.bookKindFamilyHint,
+            selected: !_business,
+            onTap: () => setState(() => _business = false),
+          ),
+          const SizedBox(height: Tokens.s2),
+          _KindChoice(
+            icon: Icons.storefront_rounded,
+            color: Tokens.businessHue,
+            title: l.bookKindBusiness,
+            hint: l.bookKindBusinessHint,
+            selected: _business,
+            onTap: () => setState(() => _business = true),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(
+            context,
+            _name.text.trim().isEmpty
+                ? null
+                : (name: _name.text.trim(), business: _business),
+          ),
+          child: Text(l.create),
+        ),
+      ],
     );
   }
 }

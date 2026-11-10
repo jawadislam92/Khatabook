@@ -90,8 +90,8 @@ class PreviewSpacesRepository implements SpacesRepository {
   final _spaces = <Space>[
     const Space(
       id: 'p',
-      name: 'Personal',
-      kind: SpaceKind.personal,
+      name: 'Home',
+      kind: SpaceKind.group,
       businessEnabled: false,
       myRole: MemberRole.owner,
       memberCount: 1,

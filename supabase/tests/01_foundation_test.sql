@@ -13,7 +13,7 @@ declare
   fam uuid; other uuid; tok text; personal_ali uuid;
   n int; r public.member_role;
 begin
-  -- Signup creates a profile and a personal space with the user as owner.
+  -- Signup creates a profile and a shared Family book with the user as owner.
   ali := test.new_user('ali@example.com', 'Ali');
   bilal := test.new_user('bilal@example.com', 'Bilal');
   sara := test.new_user('sara@example.com', 'Sara');
@@ -21,8 +21,8 @@ begin
   select count(*) into n from public.profiles where user_id = ali;
   perform test.check(n = 1, 'signup creates profile');
   select s.id into personal_ali from public.spaces s join public.space_members m on m.space_id = s.id
-    where m.user_id = ali and s.kind = 'personal';
-  perform test.check(personal_ali is not null, 'signup creates personal space with owner membership');
+    where m.user_id = ali and s.kind = 'group' and s.name = 'Family' and m.role = 'owner';
+  perform test.check(personal_ali is not null, 'signup creates a Family book with owner membership');
 
   -- Ali creates a family group through the API.
   perform test.login(ali);
@@ -67,7 +67,7 @@ begin
   select count(*) into n from public.profiles where user_id = ali;
   perform test.check(n = 1, 'member can read a co member''s profile');
   select count(*) into n from public.spaces where id = personal_ali;
-  perform test.check(n = 0, 'member still cannot see the owner''s personal space');
+  perform test.check(n = 0, 'member still cannot see the owner''s own Family book');
 
   -- Member limits.
   perform test.check(test.fails(format('update public.spaces set name = ''Hacked'' where id = %L', fam)) or

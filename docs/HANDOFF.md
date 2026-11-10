@@ -78,6 +78,14 @@ Branch: everything is on `claude/khatabook-field-service-plan-7dg24c`. There is 
    The three lenses not finished were: views, realtime and Edge Function payloads; screens that never show an error; auth and deep links (password reset recovery flow, invite link handling, device token on sign out). Rerun those checks.
 5. **Late tag timing.** Jobs show "Late" 30 minutes after their time. The owner may want 15. One constant in `job_card.dart`.
 
+### Changes asked for on 10 November (evening), done locally, not committed
+- **No Personal book.** Migration `20261111000100_family_book.sql`: new users get a shared "Family" book (kind `group`, not business) instead of a private Personal one, and old Personal books become Family books (page "My Book" renamed "Main"). Tests: `08_family_book_test.sql`, plus updated `01` and `03`. Applied to dev by hand (version row added). NOT applied to prod. The enum value `personal` stays in the type but nothing uses it.
+- **New book box** asks "What is this book for?" with two tap cards, Family or Business, instead of the "This is a business" switch. Labels say "book" now (New book, Join a book, Books).
+- **Switches** (all of them, through the theme): the off state has a dark knob with a cross on a white track with a border; on has a tick.
+- **Contacts.** `lib/features/contacts/`: on Android and iPhone the app asks for contacts access once (own short reason first, then the phone's prompt; "Open phone settings" if refused for good). Add person has "Pick from contacts" and suggests matching contacts while a name is typed. Book menu has "Import contacts": checkboxes, Select all, people already in the book are greyed out. On the web (and as a second way on phones) it takes a `.vcf` or `.csv` contacts file. `READ_CONTACTS` in the Android manifest, `NSContactsUsageDescription` in iOS `Info.plist`. Uses `flutter_contacts` 2.6 and `file_picker` 10.3 (11.x does not compile here: with AGP 9 and `android.builtInKotlin=false` it skips its Kotlin build).
+- `tool_features_check.js` checks all of the above on the web build against dev (run it like `tool_live_check.js`). `tool_offline_check.js` now opens the second job card instead of looking for a 3:00 job; `tool_live_check.js` reuses "Test Customer".
+- Node for the tools: `C:/laragon/bin/nodejs/node-v22`, with `NODE_PATH=/c/src/pwtools/node_modules`.
+
 ### Owner side items still open (see `docs/STEP_BY_STEP.md`)
 - Delete the old Firebase key `f7f90b` in Google Cloud.
 - Put the two links on the Google Branding page, add `sparkingasia.com` as an authorised domain, publish the consent screen. Until then only listed test users can use Google sign in.

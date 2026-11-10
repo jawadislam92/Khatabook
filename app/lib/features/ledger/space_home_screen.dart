@@ -51,9 +51,7 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
         .value
         ?.where((s) => s.id == widget.spaceId)
         .firstOrNull;
-    final spaceName = space == null
-        ? ''
-        : (space.kind == SpaceKind.personal ? l.spacePersonal : space.name);
+    final spaceName = space == null ? '' : space.name;
     final totalsLoad = ref.watch(spaceTotalsProvider(widget.spaceId));
     final totals = totalsLoad.value ?? SpaceTotals.zero;
     final parties = ref.watch(partyBalancesProvider(widget.spaceId));
@@ -67,11 +65,9 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
 
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final hue = switch ((space?.kind, space?.businessEnabled)) {
-      (SpaceKind.personal, _) => Tokens.personalHue,
-      (SpaceKind.group, true) => Tokens.businessHue,
-      _ => Tokens.familyHue,
-    };
+    final hue = space?.businessEnabled == true
+        ? Tokens.businessHue
+        : Tokens.familyHue;
 
     return Scaffold(
       appBar: AppBar(
@@ -94,8 +90,18 @@ class _SpaceHomeScreenState extends ConsumerState<SpaceHomeScreen> {
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'csv') shareCsv(context, ref, widget.spaceId, spaceName);
+              if (v == 'contacts') {
+                context.push('/space/${widget.spaceId}/import-contacts');
+              }
             },
             itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'contacts',
+                child: ListTile(
+                  leading: const Icon(Icons.contacts_outlined),
+                  title: Text(l.contactsImport),
+                ),
+              ),
               PopupMenuItem(
                 value: 'csv',
                 child: ListTile(

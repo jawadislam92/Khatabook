@@ -31,9 +31,7 @@ class PartyScreen extends ConsumerWidget {
         .value
         ?.where((s) => s.id == spaceId)
         .firstOrNull;
-    final spaceName = space == null
-        ? ''
-        : (space.kind == SpaceKind.personal ? l.spacePersonal : space.name);
+    final spaceName = space == null ? '' : space.name;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     if (pb == null) {

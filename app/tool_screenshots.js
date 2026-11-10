@@ -108,7 +108,7 @@ async function typeInto(page, label, value) {
   await page.waitForTimeout(1500);
 
   await shot(page, '07-spaces-simple');
-  await tapText(page, 'Personal');
+  await tapText(page, 'Home');
   await page.waitForTimeout(1200);
   await shot(page, '11-ledger-home-simple');
   await tapText(page, 'I gave money');

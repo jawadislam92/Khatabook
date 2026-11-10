@@ -136,12 +136,33 @@ class AppTheme {
           borderRadius: BorderRadius.circular(Tokens.radius),
         ),
       ),
+      // The off state must still look like a switch: a dark knob with a
+      // cross on a light track with a clear border. On is a white knob with
+      // a tick on the main colour.
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? Colors.white : null,
+          (s) => s.contains(WidgetState.selected)
+              ? Colors.white
+              : (dark ? Tokens.mutedDark : Tokens.muted),
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? scheme.primary : null,
+          (s) => s.contains(WidgetState.selected)
+              ? scheme.primary
+              : (dark ? Tokens.paperDark : Tokens.paper),
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? scheme.primary
+              : (dark ? Tokens.mutedDark : Tokens.muted),
+        ),
+        trackOutlineWidth: const WidgetStatePropertyAll(2),
+        thumbIcon: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? Icon(Icons.check_rounded, color: scheme.primary)
+              : Icon(
+                  Icons.close_rounded,
+                  color: dark ? Tokens.paperDark : Tokens.paper,
+                ),
         ),
       ),
       listTileTheme: ListTileThemeData(

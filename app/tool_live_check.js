@@ -63,7 +63,7 @@ async function texts(page) { return page.evaluate(() => [...document.querySelect
   await tapText(page, 'Sign in');
   await page.waitForTimeout(4000);
   await shot(page, '03-after-sign-in');
-  if (!(await hasText(page, 'New group')) && (await findText(page, '1'))) {
+  if (!(await hasText(page, 'New book')) && (await findText(page, '1'))) {
     for (const d of ['1', '2', '5', '8']) await tapText(page, d, 3000);
     await tapText(page, 'Continue', 3000);
     for (const d of ['1', '2', '5', '8']) await tapText(page, d, 3000);
@@ -73,9 +73,9 @@ async function texts(page) { return page.evaluate(() => [...document.querySelect
   await shot(page, '04-spaces');
   console.log('spaces screen texts:', JSON.stringify(await texts(page)));
   if (!(await hasText(page, 'QA Biz'))) {
-    await tapText(page, 'New group');
-    await typeInto(page, 'Group name', 'QA Biz');
-    await tapText(page, 'This is a business');
+    await tapText(page, 'New book');
+    await typeInto(page, 'Book name', 'QA Biz');
+    await tapText(page, 'Customers, jobs and bills.');
     await shot(page, '05-new-group-dialog');
     await tapText(page, 'Create');
     await page.waitForTimeout(3000);
@@ -92,12 +92,17 @@ async function texts(page) { return page.evaluate(() => [...document.querySelect
   await tapText(page, 'Pick a customer');
   await page.waitForTimeout(800);
   console.log('picker texts:', JSON.stringify(await texts(page)));
-  await tapText(page, 'New customer');
+  // Reuse the test customer once it exists, so every run does not add
+  // another one (the app now asks before adding a second with the same name).
+  if (!(await tapText(page, 'Test Customer', 3000))) {
+    await tapText(page, 'New customer');
+    await page.waitForTimeout(800);
+    console.log('party form texts:', JSON.stringify(await texts(page)));
+    await typeInto(page, 'Name', 'Test Customer');
+    await tapText(page, 'Save');
+    await page.waitForTimeout(1500);
+  }
   await page.waitForTimeout(800);
-  console.log('party form texts:', JSON.stringify(await texts(page)));
-  await typeInto(page, 'Name', 'Test Customer');
-  await tapText(page, 'Save');
-  await page.waitForTimeout(1500);
   await tapText(page, 'QA One', 3000);
   await shot(page, '09-new-job-filled');
   console.log('=== saving the job (app then opens its detail) ===');

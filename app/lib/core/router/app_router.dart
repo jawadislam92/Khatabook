@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/contacts/import_contacts_screen.dart';
 import '../../features/auth/auth_repository.dart';
 import '../../features/auth/auth_screen.dart';
 import '../../features/groups/activity_screen.dart';
@@ -103,6 +104,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               spaceId: st.pathParameters['sid']!,
               invoiceId: st.pathParameters['iid']!,
             ),
+          ),
+          GoRoute(
+            path: 'import-contacts',
+            builder: (_, st) =>
+                ImportContactsScreen(spaceId: st.pathParameters['sid']!),
           ),
           GoRoute(
             path: 'members',

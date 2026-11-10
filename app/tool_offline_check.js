@@ -30,6 +30,19 @@ async function findText(page, text) {
     return els.length ? { x: els[0].x + els[0].width / 2, y: els[0].y + els[0].height / 2 } : null;
   }, text);
 }
+// Taps the n-th (from 0, top to bottom) visible element showing the text.
+async function tapNth(page, text, n) {
+  const box = await page.evaluate(([t, n]) => {
+    const rs = [...document.querySelectorAll('flt-semantics')]
+      .filter(e => (e.textContent || '').includes(t) && ![...e.children].some(c => (c.textContent || '').includes(t)))
+      .map(e => e.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0)
+      .sort((a, b) => a.y - b.y);
+    const r = rs[n];
+    return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null;
+  }, [text, n]);
+  if (box) { await page.mouse.click(box.x, box.y); await page.waitForTimeout(700); console.log(stamp(), 'tap', text, '#' + n); return true; }
+  console.log(stamp(), 'NOT FOUND', text, '#' + n); return false;
+}
 async function tapText(page, text, timeout = 15000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -71,7 +84,7 @@ const JOB_READS = /\/rest\/v1\/(jobs|job_events|job_items)\?/;
   await typeInto(page, 'Password', password);
   await tapText(page, 'Sign in');
   await page.waitForTimeout(4000);
-  if (!(await hasText(page, 'New group')) && (await findText(page, '1'))) {
+  if (!(await hasText(page, 'New book')) && (await findText(page, '1'))) {
     for (let round = 0; round < 2; round++) { for (const d of ['1', '2', '5', '8']) await tapText(page, d, 3000); await tapText(page, 'Continue', 3000); }
     await page.waitForTimeout(2000);
   }
@@ -105,8 +118,8 @@ const JOB_READS = /\/rest\/v1\/(jobs|job_events|job_items)\?/;
   // Case 2: requests hang with no answer.
   mode = 'hang';
   const started = Date.now();
-  // The time is written with a narrow space before PM, so match "3:00" only.
-  await tapText(page, '3:00');
+  // A different job card from case 1: the second one on the screen.
+  await tapNth(page, 'Test camera job', 1);
   const hung = await waitText(page, ERROR, 40000);
   if (!hung) console.log(stamp(), 'still no error; waiting longer to see when it comes', (await waitText(page, ERROR, 60000)) ? 'came at ' + ((Date.now() - started) / 1000).toFixed(0) + 's' : 'never came');
   const secs = ((Date.now() - started) / 1000).toFixed(0);

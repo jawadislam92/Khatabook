@@ -51,15 +51,15 @@ begin
   select count(*) into n from public.space_member_stats where space_id = fam;
   perform test.check(n = 0, 'stranger sees no member stats');
 
-  -- Leave: member can, last owner cannot, personal cannot.
+  -- Leave: member can, last owner cannot, not even from the starting Family book.
   perform test.login(bilal);
   perform public.leave_space(fam);
   select count(*) into n from public.space_members where space_id = fam and user_id = bilal;
   perform test.check(n = 0, 'member can leave');
   perform test.login(ali);
   perform test.check(test.fails(format('select public.leave_space(%L)', fam)), 'last owner cannot leave');
-  select s.id into book from public.spaces s where s.kind = 'personal' and s.created_by = ali;
-  perform test.check(test.fails(format('select public.leave_space(%L)', book)), 'personal space cannot be left');
+  select s.id into book from public.spaces s where s.name = 'Family' and s.created_by = ali and s.id <> fam;
+  perform test.check(book is not null and test.fails(format('select public.leave_space(%L)', book)), 'last owner cannot leave the starting Family book');
 end $$;
 
 do $$
