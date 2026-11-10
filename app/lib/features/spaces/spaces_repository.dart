@@ -1,3 +1,5 @@
+import '../auth/auth_repository.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -140,5 +142,8 @@ final spacesRepositoryProvider = Provider<SpacesRepository>((ref) {
 });
 
 final mySpacesProvider = FutureProvider<List<Space>>((ref) {
+  // Load again when someone signs in or out. Without this the list read in
+  // the moment before the first sign in (empty) stayed on screen.
+  ref.watch(currentUserProvider.select((u) => u.value?.id));
   return ref.watch(spacesRepositoryProvider).listMine();
 });

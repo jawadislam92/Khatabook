@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.sparkingasia.duebook",
+      "sha256_cert_fingerprints": [
+        "C0:CC:22:B3:6F:51:D6:6D:49:7E:0E:EA:71:04:06:4B:8B:C3:FF:BD:14:0A:7C:BE:93:97:88:72:72:EC:CB:BA"
+      ]
+    }
+  }
+]

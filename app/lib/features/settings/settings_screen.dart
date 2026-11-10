@@ -58,15 +58,22 @@ class SettingsScreen extends ConsumerWidget {
                 onChanged: n.setSimpleMode,
               ),
               const Divider(height: 1),
+              // Buttons under the label, so they fit with big text too.
               ListTile(
                 title: Text(l.settingsLanguage),
-                trailing: SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(value: 'en', label: Text(l.languageEnglish)),
-                    ButtonSegment(value: 'ur', label: Text(l.languageUrdu)),
-                  ],
-                  selected: {s.languageCode},
-                  onSelectionChanged: (v) => n.setLanguage(v.first),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: Tokens.s2),
+                  child: SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(
+                        value: 'en',
+                        label: Text(l.languageEnglish),
+                      ),
+                      ButtonSegment(value: 'ur', label: Text(l.languageUrdu)),
+                    ],
+                    selected: {s.languageCode},
+                    onSelectionChanged: (v) => n.setLanguage(v.first),
+                  ),
                 ),
               ),
             ],
@@ -115,6 +122,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
         section(l.settingsAccount, Icons.person_rounded, Tokens.indigo),
+        if (ref.watch(currentUserProvider).value?.isGuest ?? false) ...[
+          const _ConnectGoogleCard(),
+          const SizedBox(height: Tokens.s3),
+        ],
         Card(
           child: ListTile(
             leading: Icon(Icons.logout, color: scheme.error),
@@ -137,7 +148,11 @@ class SettingsScreen extends ConsumerWidget {
     final yes = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        content: Text(l.signOutConfirm),
+        content: Text(
+          (ref.read(currentUserProvider).value?.isGuest ?? false)
+              ? l.guestSignOutWarning
+              : l.signOutConfirm,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -155,5 +170,74 @@ class SettingsScreen extends ConsumerWidget {
     await ref.read(appSettingsProvider.notifier).resetSecurity();
     await ref.read(appLockProvider.notifier).pinWasCleared();
     await ref.read(authRepositoryProvider).signOut();
+  }
+}
+
+/// Shown to someone who joined with only a name: connect Google so the
+/// login is not lost with the phone.
+class _ConnectGoogleCard extends ConsumerStatefulWidget {
+  const _ConnectGoogleCard();
+
+  @override
+  ConsumerState<_ConnectGoogleCard> createState() => _ConnectGoogleCardState();
+}
+
+class _ConnectGoogleCardState extends ConsumerState<_ConnectGoogleCard> {
+  var _busy = false;
+
+  Future<void> _connect() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      await ref.read(authRepositoryProvider).connectGoogle();
+      messenger.showSnackBar(SnackBar(content: Text(l.googleConnected)));
+    } on AuthFailure catch (f) {
+      if (f.kind != AuthFailureKind.cancelled) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              f.kind == AuthFailureKind.googleInUse
+                  ? l.errorGoogleInUse
+                  : l.errorGeneric,
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Tokens.radius),
+        side: const BorderSide(color: Tokens.saffronDeep, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(Tokens.s4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.guestSafeTitle,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: Tokens.s1),
+            Text(l.guestSafeBody),
+            const SizedBox(height: Tokens.s3),
+            FilledButton.icon(
+              onPressed: _busy ? null : _connect,
+              icon: const Icon(Icons.g_mobiledata),
+              label: Text(l.guestConnectGoogle),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

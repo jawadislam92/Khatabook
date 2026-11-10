@@ -5,12 +5,12 @@ import 'package:duebook/features/auth/auth_screen.dart';
 import 'helpers/pump_app.dart';
 
 void main() {
-  test('password rule: 10 chars with upper, lower and digit', () {
-    expect(AuthScreenState.passwordIsStrong('Password12'), isTrue);
-    expect(AuthScreenState.passwordIsStrong('password12'), isFalse);
-    expect(AuthScreenState.passwordIsStrong('PASSWORD12'), isFalse);
-    expect(AuthScreenState.passwordIsStrong('Passwordxx'), isFalse);
-    expect(AuthScreenState.passwordIsStrong('Pass12'), isFalse);
+  test('password rule: any 6 characters or more', () {
+    expect(AuthScreenState.passwordIsStrong('123456'), isTrue);
+    expect(AuthScreenState.passwordIsStrong('abcdef'), isTrue);
+    expect(AuthScreenState.passwordIsStrong('ali786'), isTrue);
+    expect(AuthScreenState.passwordIsStrong('12345'), isFalse);
+    expect(AuthScreenState.passwordIsStrong(''), isFalse);
   });
 
   testWidgets('shows preview banner and validates email', (tester) async {

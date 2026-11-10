@@ -23,6 +23,24 @@ Future<void> main() async {
         authFlowType: AuthFlowType.pkce,
       ),
     );
+    // Local test login (web on this computer only, see AppConfig).
+    if (AppConfig.devAutoSignIn) {
+      if (!prefs.containsKey('onboarding_done')) {
+        await prefs.setBool('onboarding_done', true);
+      }
+      final auth = Supabase.instance.client.auth;
+      if (auth.currentUser == null) {
+        try {
+          await auth.signInWithPassword(
+            email: AppConfig.devAutoEmail,
+            password: AppConfig.devAutoPassword,
+          );
+        } catch (e) {
+          // Wrong or old password: the normal sign in screen shows.
+          debugPrint('Local test login failed: $e');
+        }
+      }
+    }
     // Debug runs stay out of the table; their errors are on the console.
     if (!kDebugMode) {
       final client = Supabase.instance.client;

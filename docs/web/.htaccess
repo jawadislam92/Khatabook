@@ -1,0 +1,4 @@
+# Invite links like /join/<code> show join.html. Phones with Duebook open the
+# app instead (Android checks /.well-known/assetlinks.json first).
+RewriteEngine On
+RewriteRule ^join/[0-9a-f]{64}/?$ join.html [L]

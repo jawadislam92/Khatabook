@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/contacts/import_contacts_screen.dart';
 import '../../features/auth/auth_repository.dart';
 import '../../features/auth/auth_screen.dart';
+import '../../features/auth/pending_invite.dart';
 import '../../features/groups/activity_screen.dart';
 import '../../features/groups/join_screen.dart';
 import '../../features/groups/members_screen.dart';
@@ -27,6 +28,7 @@ import '../../features/lock/set_pin_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/spaces/spaces_screen.dart';
+import '../config/app_config.dart';
 import '../security/app_lock.dart';
 import '../settings/app_settings.dart';
 
@@ -36,6 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen(appSettingsProvider, (_, _) => refresh.ping());
   ref.listen(currentUserProvider, (_, _) => refresh.ping());
   ref.listen(appLockProvider, (_, _) => refresh.ping());
+  ref.listen(pendingInviteProvider, (_, _) => refresh.ping());
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
@@ -53,8 +56,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       if (user.isLoading) return null;
       if (user.value == null) return here == '/auth' ? null : '/auth';
-      if (!lock.pinSet) return here == '/set-pin' ? null : '/set-pin';
-      if (lock.locked) return here == '/lock' ? null : '/lock';
+      // The local test login on this computer has no PIN to type.
+      if (!ref.read(devAutoSignInProvider)) {
+        if (!lock.pinSet) return here == '/set-pin' ? null : '/set-pin';
+        if (lock.locked) return here == '/lock' ? null : '/lock';
+      }
+      // Signed in after opening an invite: show that invite now.
+      final invite = ref.read(pendingInviteProvider);
+      if (invite != null && here != '/join') return '/join?token=$invite';
       if (const {'/onboarding', '/auth', '/set-pin', '/lock'}.contains(here)) {
         return '/spaces';
       }

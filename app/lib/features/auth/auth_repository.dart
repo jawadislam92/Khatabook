@@ -1,16 +1,27 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../core/config/app_config.dart';
 
 /// The signed in person, independent of the backend.
 class AuthUser {
-  const AuthUser({required this.id, required this.email, this.displayName});
+  const AuthUser({
+    required this.id,
+    required this.email,
+    this.displayName,
+    this.isGuest = false,
+  });
   final String id;
   final String email;
   final String? displayName;
+
+  /// Joined from an invite with only a name. The login lives on this phone
+  /// until Google is connected to it.
+  final bool isGuest;
 }
 
 /// Thrown by repository methods with a message key the UI can translate.
@@ -28,6 +39,12 @@ enum AuthFailureKind {
   network,
   weakPassword,
   emailTaken,
+
+  /// The person closed the Google account picker. Not an error to show.
+  cancelled,
+
+  /// This Google account already belongs to another Duebook login.
+  googleInUse,
   unknown,
 }
 
@@ -46,6 +63,12 @@ abstract class AuthRepository {
     required String languageCode,
   });
   Future<void> signInWithGoogle();
+
+  /// Signs in with only a name, for someone who was sent an invite link.
+  Future<void> joinWithName(String name, {required String languageCode});
+
+  /// Connects Google to a name-only login so it survives a new phone.
+  Future<void> connectGoogle();
   Future<void> sendPasswordReset(String email);
   Future<void> signOut();
 
@@ -69,6 +92,7 @@ class SupabaseAuthRepository implements AuthRepository {
           displayName:
               u.userMetadata?['display_name'] as String? ??
               u.userMetadata?['full_name'] as String?,
+          isGuest: u.isAnonymous,
         );
 
   @override
@@ -128,16 +152,102 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  /// The phone's own Google account picker (Android, and iPhone once its
+  /// client ID is set). Returns the Google ID token, or null when this build
+  /// has no Google client ID and must use the browser page instead.
+  Future<String?> _googleIdToken() async {
+    if (kIsWeb || AppConfig.googleWebClientId.isEmpty) return null;
+    final ios = defaultTargetPlatform == TargetPlatform.iOS;
+    if (ios && AppConfig.googleIosClientId.isEmpty) return null;
+    final google = GoogleSignIn.instance;
+    _googleReady ??= google.initialize(
+      serverClientId: AppConfig.googleWebClientId,
+      clientId: ios ? AppConfig.googleIosClientId : null,
+    );
+    try {
+      await _googleReady;
+      final account = await google.authenticate();
+      final token = account.authentication.idToken;
+      if (token == null) throw const AuthFailure(AuthFailureKind.unknown);
+      return token;
+    } on GoogleSignInException catch (e) {
+      throw AuthFailure(
+        e.code == GoogleSignInExceptionCode.canceled
+            ? AuthFailureKind.cancelled
+            : AuthFailureKind.unknown,
+        '${e.code} ${e.description}',
+      );
+    }
+  }
+
+  static Future<void>? _googleReady;
+
   @override
   Future<void> signInWithGoogle() async {
     try {
+      final token = await _googleIdToken();
+      if (token != null) {
+        await _client.auth.signInWithIdToken(
+          provider: sb.OAuthProvider.google,
+          idToken: token,
+        );
+        return;
+      }
       await _client.auth.signInWithOAuth(
         sb.OAuthProvider.google,
         redirectTo: AppConfig.authRedirect,
         authScreenLaunchMode: sb.LaunchMode.externalApplication,
       );
+    } on AuthFailure {
+      rethrow;
+    } on sb.AuthException catch (e) {
+      throw AuthFailure(AuthFailureKind.unknown, e.message);
     } catch (e) {
-      throw AuthFailure(AuthFailureKind.unknown, '$e');
+      throw AuthFailure(AuthFailureKind.network, '$e');
+    }
+  }
+
+  @override
+  Future<void> joinWithName(String name, {required String languageCode}) async {
+    try {
+      await _client.auth.signInAnonymously(
+        data: {'display_name': name.trim(), 'language': languageCode},
+      );
+    } on sb.AuthException catch (e) {
+      throw AuthFailure(AuthFailureKind.unknown, e.message);
+    } catch (e) {
+      throw AuthFailure(AuthFailureKind.network, '$e');
+    }
+  }
+
+  @override
+  Future<void> connectGoogle() async {
+    try {
+      final token = await _googleIdToken();
+      if (token == null) {
+        await _client.auth.linkIdentity(
+          sb.OAuthProvider.google,
+          redirectTo: AppConfig.authRedirect,
+          authScreenLaunchMode: sb.LaunchMode.externalApplication,
+        );
+        return;
+      }
+      await _client.auth.linkIdentityWithIdToken(
+        provider: sb.OAuthProvider.google,
+        idToken: token,
+      );
+    } on AuthFailure {
+      rethrow;
+    } on sb.AuthException catch (e) {
+      final msg = e.message.toLowerCase();
+      throw AuthFailure(
+        msg.contains('already')
+            ? AuthFailureKind.googleInUse
+            : AuthFailureKind.unknown,
+        e.message,
+      );
+    } catch (e) {
+      throw AuthFailure(AuthFailureKind.network, '$e');
     }
   }
 
@@ -154,7 +264,15 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> signOut() async {
+    // So the account picker shows again next time.
+    if (_googleReady != null) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
+    await _client.auth.signOut();
+  }
 }
 
 /// Preview mode: no server. Any email and password work. Used for the web
@@ -214,6 +332,32 @@ class PreviewAuthRepository implements AuthRepository {
         id: 'preview',
         email: 'preview@example.com',
         displayName: 'Preview',
+      ),
+    );
+  }
+
+  @override
+  Future<void> joinWithName(String name, {required String languageCode}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    _set(
+      AuthUser(
+        id: 'preview',
+        email: '',
+        displayName: name.trim(),
+        isGuest: true,
+      ),
+    );
+  }
+
+  @override
+  Future<void> connectGoogle() async {
+    final u = _user;
+    if (u == null) return;
+    _set(
+      AuthUser(
+        id: u.id,
+        email: 'preview@example.com',
+        displayName: u.displayName,
       ),
     );
   }

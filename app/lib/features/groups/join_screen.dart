@@ -7,6 +7,7 @@ import '../../core/widgets/big_button.dart';
 import '../../core/widgets/screen_scaffold.dart';
 import '../../l10n/app_localizations.dart';
 import '../spaces/spaces_repository.dart';
+import '../auth/pending_invite.dart';
 import 'groups_models.dart';
 import 'groups_repository.dart';
 import 'role_labels.dart';
@@ -29,6 +30,10 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   @override
   void initState() {
     super.initState();
+    // This screen now holds the invite; stop the router sending us here.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => ref.read(pendingInviteProvider.notifier).clear(),
+    );
     if (widget.token != null) {
       _input.text = widget.token!;
       WidgetsBinding.instance.addPostFrameCallback((_) => _check());

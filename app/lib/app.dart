@@ -13,6 +13,7 @@ import 'core/theme/app_theme.dart';
 import 'core/push/push_service.dart';
 import 'core/theme/tokens.dart';
 import 'features/auth/auth_repository.dart';
+import 'features/auth/pending_invite.dart';
 import 'features/groups/groups_models.dart';
 import 'l10n/app_localizations.dart';
 
@@ -57,7 +58,13 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
         uri.pathSegments.isNotEmpty &&
         uri.pathSegments.first == 'join') {
       final token = InviteLink.parse(uri.toString());
-      if (token != null) ref.read(routerProvider).push('/join?token=$token');
+      if (token == null) return;
+      // Kept until the person is signed in; the router then opens the
+      // join screen. Someone already signed in goes there at once.
+      ref.read(pendingInviteProvider.notifier).set(token);
+      if (ref.read(currentUserProvider).value != null) {
+        ref.read(routerProvider).push('/join?token=$token');
+      }
     }
   }
 

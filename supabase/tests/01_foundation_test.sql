@@ -134,7 +134,7 @@ begin
   perform test.login(ali);
   tok := public.create_invite(fam, 'member');
   perform test.logout();
-  update public.invites set expires_at = now() - interval '1 minute' where token_hash = encode(digest(tok, 'sha256'), 'hex');
+  update public.invites set expires_at = now() - interval '1 minute' where token_hash = encode(extensions.digest(tok, 'sha256'), 'hex');
   perform test.login(sara);
   perform test.check(test.fails(format('select public.accept_invite(%L)', tok)), 'expired invite rejected');
 end $$;

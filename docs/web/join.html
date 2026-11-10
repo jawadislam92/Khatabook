@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join a Duebook book</title>
+<style>
+  :root { --teal: #0E8C7F; --ink: #15202B; --muted: #5B6B7A; --paper: #F7FAF9; --card: #FFFFFF; }
+  @media (prefers-color-scheme: dark) { :root { --ink: #ECF2F0; --muted: #A7B4B1; --paper: #0F1A18; --card: #16221F; } }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.55; }
+  main { max-width: 520px; margin: 0 auto; padding: 32px 16px; }
+  .card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  h1 { color: var(--teal); font-size: 26px; margin: 0 0 8px; }
+  ol { padding-left: 20px; margin: 8px 0 0; }
+  button { font: inherit; font-size: 18px; width: 100%; padding: 14px; border: 0; border-radius: 14px; background: var(--teal); color: #fff; margin-top: 12px; }
+  .urdu { font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif; direction: rtl; font-size: 19px; }
+  #done { color: var(--teal); font-weight: 600; min-height: 1.5em; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>You were invited to a Duebook book</h1>
+    <ol>
+      <li>Install Duebook from the file the person sent you.</li>
+      <li>Tap <b>Copy invite</b> below.</li>
+      <li>Open Duebook, tap <b>Were you sent an invite link?</b>, paste, and type your name.</li>
+    </ol>
+    <button id="copy">Copy invite</button>
+    <p id="done"></p>
+  </div>
+  <div class="card urdu">
+    <p>آپ کو ڈیو بک کے ایک کھاتے میں بلایا گیا ہے۔</p>
+    <p>ڈیو بک کھولیں، "کیا آپ کو دعوت کا لنک ملا ہے؟" دبائیں، لنک پیسٹ کریں اور اپنا نام لکھیں۔</p>
+  </div>
+</main>
+<script>
+  document.getElementById('copy').addEventListener('click', async () => {
+    const done = document.getElementById('done');
+    try { await navigator.clipboard.writeText(location.href); done.textContent = 'Copied. Now open Duebook.'; }
+    catch (e) { done.textContent = 'Press and hold the address bar to copy the link.'; }
+  });
+</script>
+</body>
+</html>

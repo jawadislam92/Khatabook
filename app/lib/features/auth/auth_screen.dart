@@ -6,7 +6,9 @@ import '../../core/theme/tokens.dart';
 import '../../core/widgets/big_button.dart';
 import '../../core/widgets/brand_header.dart';
 import '../../l10n/app_localizations.dart';
+import '../groups/groups_models.dart';
 import 'auth_repository.dart';
+import 'pending_invite.dart';
 
 enum _Mode { signIn, signUp }
 
@@ -29,11 +31,9 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
   String? _info;
 
   static final _emailRe = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-  static bool passwordIsStrong(String p) =>
-      p.length >= 10 &&
-      RegExp(r'[A-Z]').hasMatch(p) &&
-      RegExp(r'[a-z]').hasMatch(p) &&
-      RegExp(r'[0-9]').hasMatch(p);
+
+  /// Any password the server takes: 6 characters is its lowest limit.
+  static bool passwordIsStrong(String p) => p.length >= 6;
 
   @override
   void dispose() {
@@ -48,7 +48,8 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     AuthFailureKind.network => l.errorNetwork,
     AuthFailureKind.weakPassword => l.errorPasswordWeak,
     AuthFailureKind.emailTaken => l.haveAccount,
-    AuthFailureKind.unknown => l.errorGeneric,
+    AuthFailureKind.googleInUse => l.errorGoogleInUse,
+    AuthFailureKind.cancelled || AuthFailureKind.unknown => l.errorGeneric,
   };
 
   Future<void> _submit() async {
@@ -93,6 +94,7 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } on AuthFailure catch (f) {
+      if (f.kind == AuthFailureKind.cancelled) return;
       if (mounted) setState(() => _error = _message(f, l));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -136,6 +138,8 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (!live) _PreviewBanner(text: l.demoBanner),
+                    const _InviteJoinCard(),
+                    const SizedBox(height: Tokens.s4),
                     Text(
                       signUp ? l.createAccount : l.signIn,
                       style: text.headlineSmall?.copyWith(
@@ -328,6 +332,150 @@ class _PreviewBanner extends StatelessWidget {
             child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// For someone who got an invite link: join with only a name, no email and
+/// no password. Opens by itself when the app was opened from an invite.
+class _InviteJoinCard extends ConsumerStatefulWidget {
+  const _InviteJoinCard();
+
+  @override
+  ConsumerState<_InviteJoinCard> createState() => _InviteJoinCardState();
+}
+
+class _InviteJoinCardState extends ConsumerState<_InviteJoinCard> {
+  final _link = TextEditingController();
+  final _name = TextEditingController();
+  var _open = false;
+  var _busy = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final pending = ref.read(pendingInviteProvider);
+    if (pending != null) {
+      _open = true;
+      _link.text = InviteLink.build(pending);
+    }
+  }
+
+  @override
+  void dispose() {
+    _link.dispose();
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _join() async {
+    final l = AppLocalizations.of(context);
+    final token = InviteLink.parse(_link.text);
+    final name = _name.text.trim();
+    if (token == null) {
+      setState(() => _error = l.inviteNotFound);
+      return;
+    }
+    if (name.isEmpty) {
+      setState(() => _error = l.errorNameRequired);
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    ref.read(pendingInviteProvider.notifier).set(token);
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .joinWithName(
+            name,
+            languageCode: ref.read(appSettingsProvider).languageCode,
+          );
+    } on AuthFailure catch (f) {
+      if (mounted) {
+        setState(
+          () => _error = f.kind == AuthFailureKind.network
+              ? l.errorNetwork
+              : l.errorGeneric,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Tokens.radius),
+        side: BorderSide(color: Tokens.familyHue, width: _open ? 2 : 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(Tokens.s4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: () => setState(() => _open = !_open),
+              child: Row(
+                children: [
+                  const Icon(Icons.mail_lock_outlined, color: Tokens.familyHue),
+                  const SizedBox(width: Tokens.s3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.guestJoinTitle,
+                          style: text.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(l.guestJoinBody, style: text.bodyMedium),
+                      ],
+                    ),
+                  ),
+                  Icon(_open ? Icons.expand_less : Icons.expand_more),
+                ],
+              ),
+            ),
+            if (_open) ...[
+              const SizedBox(height: Tokens.s4),
+              TextField(
+                controller: _link,
+                decoration: InputDecoration(
+                  labelText: l.guestInviteLink,
+                  prefixIcon: const Icon(Icons.link),
+                ),
+              ),
+              const SizedBox(height: Tokens.s3),
+              TextField(
+                controller: _name,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(labelText: l.yourName),
+                onSubmitted: (_) => _join(),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: Tokens.s2),
+                Text(_error!, style: TextStyle(color: scheme.error)),
+              ],
+              const SizedBox(height: Tokens.s3),
+              BigButton(
+                label: l.guestJoinButton,
+                onPressed: _busy ? null : _join,
+                busy: _busy,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import '../auth/auth_repository.dart';
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -780,6 +782,7 @@ final catalogProvider = FutureProvider.family<List<CatalogItem>, String>((
 });
 
 final notificationsProvider = FutureProvider<List<AppNotification>>((ref) {
+  ref.watch(currentUserProvider.select((u) => u.value?.id));
   ref.watch(jobsVersionProvider('*'));
   return ref.watch(jobsRepositoryProvider).notifications();
 });
