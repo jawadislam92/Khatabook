@@ -18,6 +18,14 @@ abstract class JobsRepository {
   Future<void> confirm(String jobId);
   Future<void> setStatus(String jobId, JobStatus status, {String? note});
   Future<void> reschedule(String jobId, DateTime at, {String? note});
+
+  /// "Can't finish today". Every argument is optional.
+  Future<void> reportProblem(
+    String jobId, {
+    String? reason,
+    String? note,
+    DateTime? suggestedAt,
+  });
   Future<void> setAssignees(String jobId, List<String> userIds);
   Future<List<CatalogItem>> catalog(
     String spaceId, {
@@ -65,6 +73,11 @@ class SupabaseJobsRepository implements JobsRepository {
     ],
     createdBy: r['created_by'] as String,
     createdAt: DateTime.parse(r['created_at'] as String),
+    holdReason: r['hold_reason'] as String?,
+    holdNote: r['hold_note'] as String?,
+    suggestedAt: r['suggested_at'] == null
+        ? null
+        : DateTime.parse(r['suggested_at'] as String).toLocal(),
   );
 
   @override
@@ -155,6 +168,25 @@ class SupabaseJobsRepository implements JobsRepository {
   }
 
   @override
+  Future<void> reportProblem(
+    String jobId, {
+    String? reason,
+    String? note,
+    DateTime? suggestedAt,
+  }) async {
+    await _c.rpc<void>(
+      'report_job_problem',
+      params: {
+        'p_job': jobId,
+        'p_reason': reason,
+        'p_note': note,
+        'p_suggested_at': suggestedAt == null ? null : _ts(suggestedAt),
+      },
+    );
+    _local.add('*');
+  }
+
+  @override
   Future<void> setAssignees(String jobId, List<String> userIds) async {
     await _c.rpc<void>(
       'set_job_assignees',
@@ -218,6 +250,9 @@ class SupabaseJobsRepository implements JobsRepository {
           .single();
       return _item(saved);
     }
+    // Someone who cannot see cost prices gets null for them; saving that
+    // back would wipe the owner's cost, so leave the column alone.
+    if (item.costPricePaisa == null) data.remove('cost_price_paisa');
     await _c.from('items').update(data).eq('id', item.id);
     _local.add(item.spaceId);
     final saved = await _c
@@ -647,6 +682,27 @@ class PreviewJobsRepository implements JobsRepository {
         ],
       ),
     );
+  }
+
+  @override
+  Future<void> reportProblem(
+    String jobId, {
+    String? reason,
+    String? note,
+    DateTime? suggestedAt,
+  }) async {
+    final j = (await job(jobId))!;
+    _events[jobId]!.add(
+      JobEvent(
+        at: DateTime.now(),
+        type: 'on_hold',
+        fromStatus: j.status,
+        toStatus: JobStatus.onHold,
+        actorName: 'You',
+        note: [reason, note].whereType<String>().join(' | '),
+      ),
+    );
+    _replace(j.onHoldWith(reason: reason, note: note, suggested: suggestedAt));
   }
 
   @override

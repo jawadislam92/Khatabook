@@ -99,6 +99,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
+                path: 'items',
+                builder: (_, st) => FinishJobScreen(
+                  spaceId: st.pathParameters['sid']!,
+                  jobId: st.pathParameters['jid']!,
+                  planning: true,
+                ),
+              ),
+              GoRoute(
                 path: 'bill',
                 builder: (_, st) => BillScreen(
                   spaceId: st.pathParameters['sid']!,

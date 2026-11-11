@@ -145,7 +145,13 @@ class _TodayTab extends ConsumerWidget {
           final mine = manager
               ? jobs
               : jobs.where((j) => j.isAssignedTo(me)).toList();
-          final open = mine.where((j) => j.status.isOpen).toList();
+          // Jobs stopped on site wait for a new date; show them first.
+          final onHold = mine
+              .where((j) => j.status == JobStatus.onHold)
+              .toList();
+          final open = mine
+              .where((j) => j.status.isOpen && j.status != JobStatus.onHold)
+              .toList();
           final todays = open
               .where(
                 (j) =>
@@ -213,6 +219,8 @@ class _TodayTab extends ConsumerWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (onHold.isNotEmpty)
+                section(l.statusOnHold, onHold, date: true),
               if (overdue.isNotEmpty) section(l.earlier, overdue, date: true),
               section(l.today, todays),
               if (todays.isEmpty)
@@ -277,11 +285,14 @@ class _JobsTabState extends ConsumerState<_JobsTab> {
                               j.status.isOpen && j.status != JobStatus.finished,
                         ))
                   .toList();
-          list.sort(
-            (a, b) => _showClosed
-                ? b.scheduledAt.compareTo(a.scheduledAt)
-                : a.scheduledAt.compareTo(b.scheduledAt),
-          );
+          list.sort((a, b) {
+            if (_showClosed) return b.scheduledAt.compareTo(a.scheduledAt);
+            // Jobs that need a new date go first.
+            final ha = a.status == JobStatus.onHold ? 0 : 1;
+            final hb = b.status == JobStatus.onHold ? 0 : 1;
+            if (ha != hb) return ha - hb;
+            return a.scheduledAt.compareTo(b.scheduledAt);
+          });
           if (list.isEmpty) {
             return Center(
               child: Padding(

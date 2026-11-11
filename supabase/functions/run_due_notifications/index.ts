@@ -24,8 +24,14 @@ async function compose(row: Row, lang: string): Promise<{ title: string; body: s
   const p = row.payload as Record<string, string>;
   const ur = lang === "ur";
   let customer = "";
-  if (p.customer_id) {
-    const { data } = await supabase.from("parties").select("name").eq("id", p.customer_id).maybeSingle();
+  let customerId = p.customer_id;
+  if (!customerId && row.job_id) {
+    // Status alerts carry only the job; look the customer up through it.
+    const { data } = await supabase.from("jobs").select("customer_id").eq("id", row.job_id).maybeSingle();
+    customerId = data?.customer_id ?? "";
+  }
+  if (customerId) {
+    const { data } = await supabase.from("parties").select("name").eq("id", customerId).maybeSingle();
     customer = data?.name ?? "";
   }
   const when = p.scheduled_at ? fmtTime(p.scheduled_at) : "";
@@ -52,6 +58,20 @@ async function compose(row: Row, lang: string): Promise<{ title: string; body: s
         confirmed: ["confirmed", "نے کنفرم کیا"], on_the_way: ["is on the way to", "روانہ ہیں"],
         working: ["started work at", "نے کام شروع کیا"], finished: ["finished the job at", "نے کام مکمل کیا"],
       };
+      if (p.status === "on_hold") {
+        const reasons: Record<string, [string, string]> = {
+          no_power: ["no electricity", "بجلی نہیں"], customer_away: ["customer not there", "گاہک موجود نہیں"],
+          parts_missing: ["parts missing", "سامان کم ہے"], weather: ["weather", "موسم"], other: ["other", "کچھ اور"],
+        };
+        const r = p.reason ? reasons[p.reason] : undefined;
+        const why = r ? (ur ? `، وجہ: ${r[1]}` : ` (${r[0]})`) : "";
+        return {
+          title: ur ? "نئی تاریخ چاہیے" : "Needs a new date",
+          body: ur ? `${actor} ${customer} کا کام مکمل نہیں کر سکے${why}۔ نئی تاریخ رکھیں۔`
+                   : `${actor} could not finish at ${customer}${why}. Set a new date.`,
+          link,
+        };
+      }
       const [en, urt] = status[p.status] ?? [p.status, p.status];
       return { title: ur ? "کام کی صورتحال" : "Job update", body: ur ? `${actor} ${urt}: ${customer}` : `${actor} ${en} ${customer}`, link };
     }

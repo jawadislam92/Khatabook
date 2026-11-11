@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/update/update_check.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
@@ -87,6 +88,7 @@ class SpacesScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                const UpdateBanner(),
                 Text(
                   l.spaces,
                   style: text.titleMedium?.copyWith(

@@ -29,6 +29,7 @@ class JobCard extends StatelessWidget {
     final late =
         job.status.isOpen &&
         job.status != JobStatus.finished &&
+        job.status != JobStatus.onHold &&
         job.scheduledAt.isBefore(
           DateTime.now().subtract(const Duration(minutes: 30)),
         );
@@ -70,6 +71,13 @@ class JobCard extends StatelessWidget {
                             label: statusLabel(l, job.status),
                             color: color,
                           ),
+                          if (job.status == JobStatus.finished) ...[
+                            const SizedBox(width: 6),
+                            _Chip(
+                              label: l.billNeeded,
+                              color: Tokens.saffronDeep,
+                            ),
+                          ],
                           if (late) ...[
                             const SizedBox(width: 6),
                             _Chip(label: l.lateJob, color: Tokens.give),

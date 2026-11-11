@@ -17,14 +17,21 @@ import 'invoices_repository.dart';
 
 /// Step one of finishing a job: what was used. Quick tiles for favourites,
 /// a search for everything else, and a free text charge for the rest.
+///
+/// With [planning] it is the owner's "Items to take" list, made before the
+/// visit; the installer later finds these lines already filled in.
+/// Nothing here blocks the journey: the job can be finished with no items,
+/// and the bill can be left to the owner.
 class FinishJobScreen extends ConsumerStatefulWidget {
   const FinishJobScreen({
     super.key,
     required this.spaceId,
     required this.jobId,
+    this.planning = false,
   });
   final String spaceId;
   final String jobId;
+  final bool planning;
 
   @override
   ConsumerState<FinishJobScreen> createState() => _FinishJobScreenState();
@@ -207,7 +214,8 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
                 decimal: true,
               ),
               decoration: InputDecoration(
-                labelText: l.amount,
+                labelText: l.amountOptional,
+                helperText: l.priceLeftForOwner,
                 prefixText: 'Rs ',
               ),
             ),
@@ -225,11 +233,12 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
         ],
       ),
     );
-    final paisa = Money.parse(amt.text);
+    // The price may be left empty: the line then waits for the owner.
+    final paisa = amt.text.trim().isEmpty ? 0 : Money.parse(amt.text);
     if (ok == true &&
         desc.text.trim().isNotEmpty &&
         paisa != null &&
-        paisa > 0) {
+        paisa >= 0) {
       setState(() {
         _lines.add(
           JobItem(
@@ -272,9 +281,34 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
     }
   }
 
+  /// Finish without a bill: save what was used (nothing is fine), mark the
+  /// job finished, and leave the bill to the owner, who gets an alert.
+  Future<void> _doneOwnerBills(Job job) async {
+    if (!await _save()) return;
+    if (job.status != JobStatus.finished) {
+      try {
+        await ref
+            .read(jobsRepositoryProvider)
+            .setStatus(widget.jobId, JobStatus.finished);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context).errorGeneric)),
+          );
+        }
+        return;
+      }
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).jobDoneOwnerBills)),
+    );
+    await Navigator.of(context).maybePop();
+  }
+
   Future<void> _next(Job job) async {
     if (!await _save()) return;
-    if (job.status == JobStatus.working) {
+    if (job.status.isOpen && job.status != JobStatus.finished) {
       try {
         await ref
             .read(jobsRepositoryProvider)
@@ -305,7 +339,9 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
     final missing = jobLoad.hasValue && !jobLoad.isLoading && job == null;
     if (_loadFailed || jobLoad.failed || missing) {
       return Scaffold(
-        appBar: AppBar(title: Text(l.itemsUsed)),
+        appBar: AppBar(
+          title: Text(widget.planning ? l.itemsToTake : l.itemsUsed),
+        ),
         body: LoadError(onRetry: _retry),
       );
     }
@@ -346,7 +382,7 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.itemsUsed),
+        title: Text(widget.planning ? l.itemsToTake : l.itemsUsed),
         actions: [
           IconButton(
             tooltip: l.saveItems,
@@ -442,7 +478,7 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
                 ),
                 const SizedBox(height: Tokens.s5),
                 Text(
-                  l.itemsUsed,
+                  widget.planning ? l.itemsToTake : l.itemsUsed,
                   style: text.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -503,12 +539,30 @@ class _FinishJobScreenState extends ConsumerState<FinishJobScreen> {
                       ],
                     ),
                     const SizedBox(height: Tokens.s2),
-                    BigButton(
-                      label: l.nextMakeBill,
-                      icon: Icons.receipt_long_outlined,
-                      busy: _busy,
-                      onPressed: _lines.isEmpty ? null : () => _next(job),
-                    ),
+                    if (widget.planning)
+                      BigButton(
+                        label: l.saveItems,
+                        icon: Icons.save_outlined,
+                        busy: _busy,
+                        onPressed: _saveOnly,
+                      )
+                    else ...[
+                      BigButton(
+                        label: l.nextMakeBill,
+                        icon: Icons.receipt_long_outlined,
+                        busy: _busy,
+                        onPressed: _lines.isEmpty ? null : () => _next(job),
+                      ),
+                      if (job.status != JobStatus.finished) ...[
+                        const SizedBox(height: Tokens.s2),
+                        BigButton(
+                          label: l.doneOwnerBills,
+                          icon: Icons.task_alt,
+                          outlined: true,
+                          onPressed: _busy ? null : () => _doneOwnerBills(job),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ),
@@ -681,13 +735,22 @@ class _LineCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  'Rs ${Money.format(line.amountPaisa)}',
-                  style: text.titleMedium?.copyWith(
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w800,
+                if (line.unitPricePaisa == 0)
+                  Text(
+                    l.priceNeeded,
+                    style: text.labelLarge?.copyWith(
+                      color: Tokens.saffronDeep,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  )
+                else
+                  Text(
+                    'Rs ${Money.format(line.amountPaisa)}',
+                    style: text.titleMedium?.copyWith(
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
                 IconButton(
                   tooltip: l.remove,
                   icon: Icon(Icons.delete_outline, color: scheme.error),

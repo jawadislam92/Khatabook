@@ -23,6 +23,7 @@ String statusLabel(AppLocalizations l, JobStatus s) => switch (s) {
   JobStatus.confirmed => l.statusConfirmed,
   JobStatus.onTheWay => l.statusOnTheWay,
   JobStatus.working => l.statusWorking,
+  JobStatus.onHold => l.statusOnHold,
   JobStatus.finished => l.statusFinished,
   JobStatus.invoiced => l.statusInvoiced,
   JobStatus.paid => l.statusPaid,
@@ -34,6 +35,7 @@ Color statusColor(JobStatus s) => switch (s) {
   JobStatus.confirmed => Tokens.sky,
   JobStatus.onTheWay => Tokens.indigo,
   JobStatus.working => Tokens.violet,
+  JobStatus.onHold => Tokens.rose,
   JobStatus.finished => Tokens.get,
   JobStatus.invoiced => Tokens.saffronDeep,
   JobStatus.paid => Tokens.primary,
@@ -64,4 +66,12 @@ String unitLabel(AppLocalizations l, String u) => switch (u) {
   'kg' => l.unitKg,
   'box' => l.unitBox,
   _ => u,
+};
+
+String holdReasonLabel(AppLocalizations l, String r) => switch (r) {
+  'no_power' => l.holdNoPower,
+  'customer_away' => l.holdCustomerAway,
+  'parts_missing' => l.holdPartsMissing,
+  'weather' => l.holdWeather,
+  _ => l.holdOther,
 };

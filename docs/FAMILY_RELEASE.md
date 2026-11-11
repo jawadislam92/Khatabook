@@ -80,7 +80,16 @@ Each link works once and stops working after 48 hours. Make one link per person.
 
 ## Updates later
 
-When there is a new version, send the new `duebook-prod.apk` the same way. It installs over the old one and keeps everything.
+From version 1.1.0 the app checks the website each time it opens. When there is a newer version, it shows **A new version is ready** with an **Update** button, so you do not have to send files again.
+
+For each new version Claude builds `duebook-prod.apk` and updates `docs/web/version.json`. Then:
+
+1. Open Hostinger, then **File Manager**, then `public_html/duebook`.
+2. Upload `duebook-prod.apk` and rename it to `duebook.apk` (replace the old one).
+3. Upload `docs/web/version.json` (replace the old one).
+4. Upload `docs/web/.htaccess` again if Claude says it changed.
+
+People who still have version 1.0 (before 11 November evening) do not have the update button yet. Send them the 1.1.0 file once by WhatsApp; after that, updates come through the button.
 
 ## iPhone
 

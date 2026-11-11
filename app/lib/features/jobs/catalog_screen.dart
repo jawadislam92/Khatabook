@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/tokens.dart';
 import '../../core/utils/money.dart';
@@ -7,6 +12,7 @@ import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../groups/role_labels.dart';
 import '../spaces/spaces_repository.dart';
+import 'catalog_csv.dart';
 import 'job_labels.dart';
 import 'jobs_models.dart';
 import 'jobs_repository.dart';
@@ -40,6 +46,39 @@ class CatalogScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.catalog),
         automaticallyImplyLeading: !embedded,
+        actions: [
+          if (manager)
+            PopupMenuButton<String>(
+              onSelected: (v) => switch (v) {
+                'export' => _export(context, ref, items.value ?? const []),
+                'import' => _import(context, ref, items.value ?? const []),
+                _ => _sample(),
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'import',
+                  child: ListTile(
+                    leading: const Icon(Icons.upload_file),
+                    title: Text(l.catalogImport),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'export',
+                  child: ListTile(
+                    leading: const Icon(Icons.download),
+                    title: Text(l.catalogExport),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'sample',
+                  child: ListTile(
+                    leading: const Icon(Icons.description_outlined),
+                    title: Text(l.catalogSample),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       floatingActionButton: manager
           ? FloatingActionButton.extended(
@@ -130,6 +169,117 @@ class CatalogScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _shareFile(List<int> bytes, String name) =>
+      SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile.fromData(
+              Uint8List.fromList(bytes),
+              name: name,
+              mimeType: 'text/csv',
+            ),
+          ],
+        ),
+      );
+
+  Future<void> _export(
+    BuildContext context,
+    WidgetRef ref,
+    List<CatalogItem> items,
+  ) {
+    final seesCost = items.any((i) => i.costPricePaisa != null);
+    return _shareFile(
+      catalogCsv(items, includeCost: seesCost),
+      'duebook-items.csv',
+    );
+  }
+
+  Future<void> _sample() =>
+      _shareFile(catalogSampleCsv(), 'duebook-items-sample.csv');
+
+  /// Pick a CSV, show what would change, save on OK. Nothing is saved
+  /// before the person agrees.
+  Future<void> _import(
+    BuildContext context,
+    WidgetRef ref,
+    List<CatalogItem> existing,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final res = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['csv'],
+      withData: true,
+    );
+    final bytes = res?.files.firstOrNull?.bytes;
+    if (bytes == null || !context.mounted) return;
+    final plan = planCatalogImport(
+      utf8.decode(bytes, allowMalformed: true),
+      spaceId: spaceId,
+      existing: existing,
+    );
+    if (!plan.headerFound) {
+      messenger.showSnackBar(SnackBar(content: Text(l.importWrongFile)));
+      return;
+    }
+    final changes = plan.toAdd.length + plan.toUpdate.length;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.importPreviewTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.importNew(plan.toAdd.length)),
+              Text(l.importUpdated(plan.toUpdate.length)),
+              if (plan.skipped.isNotEmpty) ...[
+                const SizedBox(height: Tokens.s2),
+                Text(l.importSkipped(plan.skipped.length)),
+                for (final sk in plan.skipped.take(20))
+                  Text(switch (sk.reason) {
+                    CatalogSkip.noName => l.skipNoName(sk.line),
+                    CatalogSkip.badPrice => l.skipBadPrice(sk.line),
+                    CatalogSkip.repeated => l.skipRepeated(sk.line),
+                  }, style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: changes == 0 ? null : () => Navigator.pop(ctx, true),
+            child: Text(l.catalogImport),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final repo = ref.read(jobsRepositoryProvider);
+    var saved = 0;
+    try {
+      for (final i in plan.toAdd) {
+        await repo.saveItem(i, isNew: true);
+        saved++;
+      }
+      for (final i in plan.toUpdate) {
+        await repo.saveItem(i, isNew: false);
+        saved++;
+      }
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errorGeneric)));
+    }
+    ref.invalidate(catalogProvider(spaceId));
+    if (saved > 0) {
+      messenger.showSnackBar(SnackBar(content: Text(l.importDone(saved))));
+    }
   }
 
   Future<void> _edit(

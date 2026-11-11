@@ -103,7 +103,7 @@ const JOB_READS = /\/rest\/v1\/(jobs|job_events|job_items)\?/;
   });
   // Each case opens a different job, because a job the app has already
   // loaded is shown from memory and needs no request.
-  await tapText(page, 'Wed, Nov 11');
+  await tapNth(page, 'Test camera job', 0);
   const quick = await waitText(page, ERROR, 15000);
   await shot(page, 'o2-no-signal');
   check(quick, 'no signal: the job screen shows the error instead of a spinner');

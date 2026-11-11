@@ -125,6 +125,28 @@ class JobDetailScreen extends ConsumerWidget {
         onPressed: () => context.push('/space/$spaceId/job/$jobId/finish'),
       );
     }
+    if (manager && job.status == JobStatus.onHold) {
+      primary = BigButton(
+        label: l.setNewDate,
+        icon: Icons.event_repeat,
+        onPressed: () => _run(context, () => _reschedule(context, ref, job)),
+      );
+    }
+
+    // Nothing in the journey is required: later steps can be reached
+    // straight away, and the job can always be stopped for today.
+    final active = const {
+      JobStatus.scheduled,
+      JobStatus.confirmed,
+      JobStatus.onTheWay,
+      JobStatus.working,
+    }.contains(job.status);
+    final canAct = (mine || manager) && active;
+    final skipToStart =
+        canAct &&
+        (job.status == JobStatus.scheduled ||
+            job.status == JobStatus.confirmed);
+    final skipToFinish = canAct && job.status != JobStatus.working;
 
     return Scaffold(
       appBar: AppBar(
@@ -293,10 +315,64 @@ class JobDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
+          if (job.status == JobStatus.onHold)
+            _HoldBanner(job: job, manager: manager),
           if (primary != null) ...[const SizedBox(height: Tokens.s3), primary],
+          if (skipToStart || skipToFinish)
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: Tokens.s2,
+              children: [
+                if (skipToStart)
+                  TextButton.icon(
+                    onPressed: () => _run(
+                      context,
+                      () => repo.setStatus(jobId, JobStatus.working),
+                    ),
+                    icon: const Icon(Icons.handyman_outlined),
+                    label: Text(l.startWork),
+                  ),
+                if (skipToFinish)
+                  TextButton.icon(
+                    onPressed: () =>
+                        context.push('/space/$spaceId/job/$jobId/finish'),
+                    icon: const Icon(Icons.task_alt),
+                    label: Text(l.finishJob),
+                  ),
+              ],
+            ),
+          if (canAct) ...[
+            const SizedBox(height: Tokens.s2),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Tokens.rose,
+                side: const BorderSide(color: Tokens.rose),
+              ),
+              onPressed: () => _cantFinish(context, ref, job),
+              icon: const Icon(Icons.pause_circle_outline),
+              label: Text(l.cantFinishToday),
+            ),
+          ],
+          if (manager && job.status.isOpen && job.status != JobStatus.finished)
+            Padding(
+              padding: const EdgeInsets.only(top: Tokens.s2),
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    context.push('/space/$spaceId/job/$jobId/items'),
+                icon: const Icon(Icons.inventory_2_outlined),
+                label: Text(l.itemsToTake),
+              ),
+            ),
           if (job.status == JobStatus.invoiced || job.status == JobStatus.paid)
             _InvoiceCard(spaceId: spaceId, jobId: jobId),
-          _ItemsUsed(spaceId: spaceId, jobId: jobId),
+          _ItemsUsed(
+            spaceId: spaceId,
+            jobId: jobId,
+            planned:
+                job.status.isOpen &&
+                job.status != JobStatus.finished &&
+                job.status != JobStatus.working,
+          ),
           const SizedBox(height: Tokens.s5),
           Text(
             l.whoGoes,
@@ -352,6 +428,7 @@ class JobDetailScreen extends ConsumerWidget {
                 'assigned' => Icons.group_outlined,
                 'confirmed' => Icons.check_circle_outline,
                 'rescheduled' => Icons.schedule,
+                'on_hold' => Icons.pause_circle_outline,
                 _ => Icons.flag_outlined,
               }, color: scheme.onSurfaceVariant),
               title: Text(switch (e.type) {
@@ -359,6 +436,7 @@ class JobDetailScreen extends ConsumerWidget {
                 'assigned' => l.eventAssigned(e.actorName ?? ''),
                 'confirmed' => l.eventConfirmed(e.actorName ?? ''),
                 'rescheduled' => l.eventRescheduled(e.actorName ?? ''),
+                'on_hold' => l.eventOnHold(e.actorName ?? ''),
                 _ => l.eventStatus(
                   e.actorName ?? '',
                   e.toStatus == null ? '' : statusLabel(l, e.toStatus!),
@@ -374,17 +452,35 @@ class JobDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// "Can't finish today": reason, note and date are all optional.
+  Future<void> _cantFinish(BuildContext context, WidgetRef ref, Job job) async {
+    final sent = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _CantFinishSheet(jobId: jobId),
+    );
+    if (sent == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).holdSent)),
+      );
+    }
+  }
+
   Future<void> _reschedule(BuildContext context, WidgetRef ref, Job job) async {
+    final first = DateTime.now().subtract(const Duration(days: 1));
+    var start = job.suggestedAt ?? job.scheduledAt;
+    if (start.isBefore(first)) start = DateTime.now();
     final d = await showDatePicker(
       context: context,
-      initialDate: job.scheduledAt,
+      initialDate: start,
       firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (d == null || !context.mounted) return;
     final t = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(job.scheduledAt),
+      initialTime: TimeOfDay.fromDateTime(start),
     );
     if (t == null) return;
     await ref
@@ -514,9 +610,16 @@ class _InvoiceCard extends ConsumerWidget {
 
 /// Materials recorded against the job so far.
 class _ItemsUsed extends ConsumerWidget {
-  const _ItemsUsed({required this.spaceId, required this.jobId});
+  const _ItemsUsed({
+    required this.spaceId,
+    required this.jobId,
+    this.planned = false,
+  });
   final String spaceId;
   final String jobId;
+
+  /// Before the work: the owner's list of items to take.
+  final bool planned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -535,7 +638,7 @@ class _ItemsUsed extends ConsumerWidget {
       children: [
         const SizedBox(height: Tokens.s5),
         Text(
-          l.itemsUsed,
+          planned ? l.itemsToTake : l.itemsUsed,
           style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: Tokens.s2),
@@ -551,7 +654,9 @@ class _ItemsUsed extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  'Rs ${Money.format(i.amountPaisa)}',
+                  i.unitPricePaisa == 0
+                      ? l.priceNeeded
+                      : 'Rs ${Money.format(i.amountPaisa)}',
                   style: text.bodyLarge?.copyWith(fontFamily: 'Roboto'),
                 ),
               ],
@@ -577,6 +682,196 @@ class _ItemsUsed extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Why the job stopped, what the installer wrote, and the date they
+/// suggested. Installers see that the owner will set the new date.
+class _HoldBanner extends StatelessWidget {
+  const _HoldBanner({required this.job, required this.manager});
+  final Job job;
+  final bool manager;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final locale = Localizations.localeOf(context).toString();
+    final lines = [
+      if (job.holdReason != null) holdReasonLabel(l, job.holdReason!),
+      if (job.holdNote != null) job.holdNote!,
+      if (job.suggestedAt != null)
+        l.suggestedDate(
+          '${DateFormat.MMMEd(locale).format(job.suggestedAt!)}  ${clockTime(context, job.suggestedAt!)}',
+        ),
+      if (!manager) l.waitingNewDate,
+    ];
+    return Container(
+      margin: const EdgeInsets.only(top: Tokens.s3),
+      padding: const EdgeInsets.all(Tokens.s3),
+      decoration: BoxDecoration(
+        color: Tokens.rose.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(Tokens.radius),
+        border: Border.all(color: Tokens.rose),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.pause_circle_outline, color: Tokens.rose),
+          const SizedBox(width: Tokens.s3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.holdBanner,
+                  style: text.titleMedium?.copyWith(
+                    color: Tokens.rose,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                for (final line in lines) Text(line, style: text.bodyLarge),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CantFinishSheet extends ConsumerStatefulWidget {
+  const _CantFinishSheet({required this.jobId});
+  final String jobId;
+
+  @override
+  ConsumerState<_CantFinishSheet> createState() => _CantFinishSheetState();
+}
+
+class _CantFinishSheetState extends ConsumerState<_CantFinishSheet> {
+  final _note = TextEditingController();
+  String? _reason;
+  DateTime? _date;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final d = await showDatePicker(
+      context: context,
+      initialDate: _date ?? now.add(const Duration(days: 1)),
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (d == null || !mounted) return;
+    final t = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 10, minute: 0),
+    );
+    if (!mounted) return;
+    setState(
+      () => _date = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        t?.hour ?? 10,
+        t?.minute ?? 0,
+      ),
+    );
+  }
+
+  Future<void> _send() async {
+    setState(() => _busy = true);
+    try {
+      final note = _note.text.trim();
+      await ref
+          .read(jobsRepositoryProvider)
+          .reportProblem(
+            widget.jobId,
+            reason: _reason,
+            note: note.isEmpty ? null : note,
+            suggestedAt: _date,
+          );
+      if (mounted) Navigator.pop(context, true);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).errorGeneric)),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final locale = Localizations.localeOf(context).toString();
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        Tokens.s4,
+        0,
+        Tokens.s4,
+        MediaQuery.viewInsetsOf(context).bottom + Tokens.s4,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.cantFinishTitle,
+              style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            Text(l.cantFinishHint, style: text.bodyMedium),
+            const SizedBox(height: Tokens.s3),
+            Wrap(
+              spacing: Tokens.s2,
+              runSpacing: Tokens.s2,
+              children: [
+                for (final r in holdReasons)
+                  ChoiceChip(
+                    label: Text(holdReasonLabel(l, r)),
+                    selected: _reason == r,
+                    onSelected: (on) => setState(() => _reason = on ? r : null),
+                  ),
+              ],
+            ),
+            const SizedBox(height: Tokens.s3),
+            TextField(
+              controller: _note,
+              maxLength: 500,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l.holdNoteLabel),
+            ),
+            OutlinedButton.icon(
+              onPressed: _pickDate,
+              icon: const Icon(Icons.event),
+              label: Text(
+                _date == null
+                    ? l.suggestDate
+                    : l.suggestedDate(
+                        '${DateFormat.MMMEd(locale).format(_date!)}  ${clockTime(context, _date!)}',
+                      ),
+              ),
+            ),
+            const SizedBox(height: Tokens.s4),
+            BigButton(
+              label: l.holdSend,
+              icon: Icons.send,
+              busy: _busy,
+              onPressed: _busy ? null : _send,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

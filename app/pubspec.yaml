@@ -1,7 +1,7 @@
 name: duebook
 description: Family ledger and field service app.
 publish_to: "none"
-version: 0.1.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.13.0
@@ -33,6 +33,7 @@ dependencies:
   flutter_contacts: ^2.6.0
   file_picker: ^10.3.0
   google_sign_in: ^7.2.0
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../core/utils/csv.dart';
+
 /// A name and number from the phone's contacts or from a contacts file.
 class PhoneContact {
   const PhoneContact(this.name, this.phone);
@@ -125,7 +127,7 @@ String _vcardValue(String head, String value) {
 }
 
 Iterable<PhoneContact> _csv(String text) sync* {
-  final rows = _csvRows(text);
+  final rows = parseCsv(text);
   if (rows.length < 2) return;
   final head = rows.first.map((h) => h.trim().toLowerCase()).toList();
   int col(bool Function(String) test) => head.indexWhere(test);
@@ -154,42 +156,4 @@ Iterable<PhoneContact> _csv(String text) sync* {
     final phone = cell(r, phoneCol).split(':::').first.trim();
     yield PhoneContact(name, phone.isEmpty ? null : phone);
   }
-}
-
-List<List<String>> _csvRows(String text) {
-  final rows = <List<String>>[];
-  var row = <String>[];
-  final cell = StringBuffer();
-  var quoted = false;
-  for (var i = 0; i < text.length; i++) {
-    final c = text[i];
-    if (quoted) {
-      if (c == '"') {
-        if (i + 1 < text.length && text[i + 1] == '"') {
-          cell.write('"');
-          i++;
-        } else {
-          quoted = false;
-        }
-      } else {
-        cell.write(c);
-      }
-    } else if (c == '"') {
-      quoted = true;
-    } else if (c == ',') {
-      row.add(cell.toString());
-      cell.clear();
-    } else if (c == '\n' || c == '\r') {
-      if (c == '\r' && i + 1 < text.length && text[i + 1] == '\n') i++;
-      row.add(cell.toString());
-      cell.clear();
-      if (row.any((s) => s.isNotEmpty)) rows.add(row);
-      row = <String>[];
-    } else {
-      cell.write(c);
-    }
-  }
-  row.add(cell.toString());
-  if (row.any((s) => s.isNotEmpty)) rows.add(row);
-  return rows;
 }

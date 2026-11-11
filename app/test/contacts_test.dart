@@ -102,35 +102,36 @@ void main() {
     });
   });
 
-  testWidgets('Add person: pick from contacts asks first, then fills the form', (
-    tester,
-  ) async {
-    _phoneSize(tester);
-    final fake = FakeContacts();
-    await pumpScreen(
-      tester,
-      _opener('b'),
-      overrides: [contactsSourceProvider.overrideWithValue(fake)],
-    );
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Pick from contacts'));
-    await tester.pumpAndSettle();
-    expect(find.text('Use your phone contacts?'), findsOneWidget);
-    await tester.tap(find.text('Allow'));
-    await tester.pumpAndSettle();
-    expect(fake.asked, 1);
-    await tester.enterText(find.byType(TextField).last, 'zub');
-    await tester.pumpAndSettle();
-    expect(find.text('Ayesha Baji'), findsNothing);
-    await tester.tap(find.text('Zubair Electric'));
-    await tester.pumpAndSettle();
-    final fields = tester
-        .widgetList<TextFormField>(find.byType(TextFormField))
-        .map((f) => f.controller!.text)
-        .toList();
-    expect(fields, ['Zubair Electric', '0300 5550001']);
-  });
+  testWidgets(
+    'Add person: pick from contacts asks first, then fills the form',
+    (tester) async {
+      _phoneSize(tester);
+      final fake = FakeContacts();
+      await pumpScreen(
+        tester,
+        _opener('b'),
+        overrides: [contactsSourceProvider.overrideWithValue(fake)],
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pick from contacts'));
+      await tester.pumpAndSettle();
+      expect(find.text('Use your phone contacts?'), findsOneWidget);
+      await tester.tap(find.text('Allow'));
+      await tester.pumpAndSettle();
+      expect(fake.asked, 1);
+      await tester.enterText(find.byType(TextField).last, 'zub');
+      await tester.pumpAndSettle();
+      expect(find.text('Ayesha Baji'), findsNothing);
+      await tester.tap(find.text('Zubair Electric'));
+      await tester.pumpAndSettle();
+      final fields = tester
+          .widgetList<TextFormField>(find.byType(TextFormField))
+          .map((f) => f.controller!.text)
+          .toList();
+      expect(fields, ['Zubair Electric', '0300 5550001']);
+    },
+  );
 
   testWidgets('Add person: typing a name suggests matching contacts', (
     tester,
@@ -212,7 +213,9 @@ void main() {
     await pumpScreen(
       tester,
       const ImportContactsScreen(spaceId: 'b'),
-      overrides: [contactsSourceProvider.overrideWithValue(FileContactsSource())],
+      overrides: [
+        contactsSourceProvider.overrideWithValue(FileContactsSource()),
+      ],
     );
     await tester.pumpAndSettle();
     expect(find.text('Choose contacts file'), findsOneWidget);

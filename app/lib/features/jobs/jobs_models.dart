@@ -5,6 +5,9 @@ enum JobStatus {
   confirmed,
   onTheWay,
   working,
+
+  /// Stopped on site (no power, customer away...). Waits for a new date.
+  onHold,
   finished,
   invoiced,
   paid,
@@ -29,6 +32,7 @@ extension JobStatusDb on JobStatus {
     JobStatus.confirmed => 'confirmed',
     JobStatus.onTheWay => 'on_the_way',
     JobStatus.working => 'working',
+    JobStatus.onHold => 'on_hold',
     JobStatus.finished => 'finished',
     JobStatus.invoiced => 'invoiced',
     JobStatus.paid => 'paid',
@@ -73,6 +77,9 @@ class Job {
     this.address,
     this.notes,
     this.estimatePaisa,
+    this.holdReason,
+    this.holdNote,
+    this.suggestedAt,
   });
   final String id;
   final String spaceId;
@@ -89,6 +96,13 @@ class Job {
   final List<JobAssignee> assignees;
   final String createdBy;
   final DateTime createdAt;
+
+  /// Why the job was stopped on site: one of [holdReasons], or null.
+  final String? holdReason;
+  final String? holdNote;
+
+  /// The date the installer suggested for the next visit.
+  final DateTime? suggestedAt;
 
   bool isAssignedTo(String userId) => assignees.any((a) => a.userId == userId);
   bool get anyoneConfirmed => assignees.any((a) => a.confirmed);
@@ -118,8 +132,46 @@ class Job {
     assignees: assignees ?? this.assignees,
     createdBy: createdBy,
     createdAt: createdAt,
+    holdReason: status == null || status == JobStatus.onHold
+        ? holdReason
+        : null,
+    holdNote: status == null || status == JobStatus.onHold ? holdNote : null,
+    suggestedAt: status == null || status == JobStatus.onHold
+        ? suggestedAt
+        : null,
+  );
+
+  /// The same job stopped on site.
+  Job onHoldWith({String? reason, String? note, DateTime? suggested}) => Job(
+    id: id,
+    spaceId: spaceId,
+    customerId: customerId,
+    customerName: customerName,
+    customerPhone: customerPhone,
+    title: title,
+    type: type,
+    scheduledAt: scheduledAt,
+    address: address,
+    notes: notes,
+    estimatePaisa: estimatePaisa,
+    status: JobStatus.onHold,
+    assignees: assignees,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    holdReason: reason,
+    holdNote: note,
+    suggestedAt: suggested,
   );
 }
+
+/// Reasons an installer can give for stopping a job, as stored on the server.
+const holdReasons = [
+  'no_power',
+  'customer_away',
+  'parts_missing',
+  'weather',
+  'other',
+];
 
 class JobEvent {
   const JobEvent({
