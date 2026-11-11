@@ -12,6 +12,7 @@ import 'core/settings/app_settings.dart';
 import 'core/theme/app_theme.dart';
 import 'core/push/push_service.dart';
 import 'core/theme/tokens.dart';
+import 'core/widgets/clear_of_system_bars.dart';
 import 'features/auth/auth_repository.dart';
 import 'features/auth/pending_invite.dart';
 import 'features/groups/groups_models.dart';
@@ -116,7 +117,7 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
           data: mq.copyWith(
             textScaler: TextScaler.linear(factor.clamp(0.8, 2.0)),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: ClearOfSystemBars(child: child ?? const SizedBox.shrink()),
         );
       },
     );

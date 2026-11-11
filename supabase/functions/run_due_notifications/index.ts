@@ -72,6 +72,14 @@ async function compose(row: Row, lang: string): Promise<{ title: string; body: s
           link,
         };
       }
+      if (p.status === "follow_up") {
+        return {
+          title: ur ? "نیا وزٹ بک ہوا" : "Another visit booked",
+          body: ur ? `${actor} نے ${customer} کے لیے ${when} کا وزٹ بک کیا: ${p.title}`
+                   : `${actor} booked ${customer} again for ${when}: ${p.title}`,
+          link,
+        };
+      }
       const [en, urt] = status[p.status] ?? [p.status, p.status];
       return { title: ur ? "کام کی صورتحال" : "Job update", body: ur ? `${actor} ${urt}: ${customer}` : `${actor} ${en} ${customer}`, link };
     }

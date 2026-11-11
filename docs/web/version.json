@@ -1,6 +1,6 @@
 {
-  "build": 2,
-  "version": "1.1.0",
+  "build": 3,
+  "version": "1.1.1",
   "apk": "https://duebook.sparkingasia.com/duebook.apk",
-  "notes": "Can't finish today, items to take, finish without a bill, catalogue import"
+  "notes": "Book another visit, buttons no longer hide behind the phone's navigation bar, alerts for finished and moved jobs"
 }

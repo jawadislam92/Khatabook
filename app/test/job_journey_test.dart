@@ -207,4 +207,53 @@ void main() {
     final saved = await tester.runAsync(() => items.jobItems(job.id));
     expect(saved!.single.description, 'Panel 550W');
   });
+
+  testWidgets('a finished job can book another visit with its own bill', (
+    tester,
+  ) async {
+    _phoneSize(tester);
+    final holder = ValueNotifier<Widget>(const SizedBox.shrink());
+    addTearDown(holder.dispose);
+    final c = await pumpScreen(
+      tester,
+      ValueListenableBuilder<Widget>(
+        valueListenable: holder,
+        builder: (_, w, _) => w,
+      ),
+    );
+    final jobs = c.read(jobsRepositoryProvider) as PreviewJobsRepository;
+    await jobs.ready;
+    final done = (await jobs.jobs('b'))
+        .firstWhere((j) => j.status == JobStatus.finished);
+    holder.value = JobDetailScreen(spaceId: 'b', jobId: done.id);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Book another visit'));
+    await tester.tap(find.text('Book another visit'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'What needs doing?'),
+      'Add 1 more camera',
+    );
+    final before = (await jobs.job(done.id))!.status;
+    await tester.tap(find.text('Book visit'));
+    await tester.pumpAndSettle();
+
+    final all = await jobs.jobs('b');
+    final next = all.firstWhere((j) => j.title == 'Add 1 more camera');
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    expect(next.status, JobStatus.scheduled);
+    expect(next.customerId, done.customerId);
+    expect(
+      next.assignees.map((a) => a.userId),
+      done.assignees.map((a) => a.userId),
+    );
+    expect(next.scheduledAt.day, tomorrow.day);
+    expect(next.scheduledAt.hour, 10);
+    expect(
+      (await jobs.job(done.id))!.status,
+      before,
+      reason: 'the first job and its bill stay as they were',
+    );
+  });
 }

@@ -19,6 +19,15 @@ abstract class JobsRepository {
   Future<void> setStatus(String jobId, JobStatus status, {String? note});
   Future<void> reschedule(String jobId, DateTime at, {String? note});
 
+  /// "Book another visit": a new job for the same customer and team at
+  /// [at]. Returns the new job's id.
+  Future<String> bookFollowUp(
+    String jobId,
+    DateTime at, {
+    String? title,
+    String? notes,
+  });
+
   /// "Can't finish today". Every argument is optional.
   Future<void> reportProblem(
     String jobId, {
@@ -165,6 +174,26 @@ class SupabaseJobsRepository implements JobsRepository {
       params: {'p_job': jobId, 'p_scheduled_at': _ts(at), 'p_note': note},
     );
     _local.add('*');
+  }
+
+  @override
+  Future<String> bookFollowUp(
+    String jobId,
+    DateTime at, {
+    String? title,
+    String? notes,
+  }) async {
+    final id = await _c.rpc<String>(
+      'book_follow_up',
+      params: {
+        'p_job': jobId,
+        'p_scheduled_at': _ts(at),
+        'p_title': title,
+        'p_notes': notes,
+      },
+    );
+    _local.add('*');
+    return id;
   }
 
   @override
@@ -682,6 +711,50 @@ class PreviewJobsRepository implements JobsRepository {
         ],
       ),
     );
+  }
+
+  @override
+  Future<String> bookFollowUp(
+    String jobId,
+    DateTime at, {
+    String? title,
+    String? notes,
+  }) async {
+    final j = (await job(jobId))!;
+    final t = title?.trim() ?? '';
+    final n = Job(
+      id: _uuid.v4(),
+      spaceId: j.spaceId,
+      customerId: j.customerId,
+      customerName: j.customerName,
+      customerPhone: j.customerPhone,
+      title: t.isEmpty ? j.title : t,
+      type: j.type,
+      scheduledAt: at,
+      address: j.address,
+      notes: (notes?.trim().isEmpty ?? true) ? j.notes : notes!.trim(),
+      status: JobStatus.scheduled,
+      assignees: [
+        for (final a in j.assignees)
+          JobAssignee(userId: a.userId, name: a.name),
+      ],
+      createdBy: 'preview',
+      createdAt: DateTime.now(),
+    );
+    _jobs.add(n);
+    _events[n.id] = [
+      JobEvent(
+        at: n.createdAt,
+        type: 'created',
+        toStatus: JobStatus.scheduled,
+        actorName: 'You',
+      ),
+    ];
+    _events[jobId]!.add(
+      JobEvent(at: DateTime.now(), type: 'follow_up', actorName: 'You'),
+    );
+    _changes.add(j.spaceId);
+    return n.id;
   }
 
   @override

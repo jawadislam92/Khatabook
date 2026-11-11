@@ -353,6 +353,21 @@ class JobDetailScreen extends ConsumerWidget {
               label: Text(l.cantFinishToday),
             ),
           ],
+          // More work after the job is done: a new visit with its own bill.
+          if ((mine || manager) &&
+              const {
+                JobStatus.finished,
+                JobStatus.invoiced,
+                JobStatus.paid,
+              }.contains(job.status))
+            Padding(
+              padding: const EdgeInsets.only(top: Tokens.s2),
+              child: OutlinedButton.icon(
+                onPressed: () => _bookVisit(context, job),
+                icon: const Icon(Icons.event_repeat),
+                label: Text(l.bookVisit),
+              ),
+            ),
           if (manager && job.status.isOpen && job.status != JobStatus.finished)
             Padding(
               padding: const EdgeInsets.only(top: Tokens.s2),
@@ -429,6 +444,7 @@ class JobDetailScreen extends ConsumerWidget {
                 'confirmed' => Icons.check_circle_outline,
                 'rescheduled' => Icons.schedule,
                 'on_hold' => Icons.pause_circle_outline,
+                'follow_up' => Icons.event_repeat,
                 _ => Icons.flag_outlined,
               }, color: scheme.onSurfaceVariant),
               title: Text(switch (e.type) {
@@ -437,6 +453,7 @@ class JobDetailScreen extends ConsumerWidget {
                 'confirmed' => l.eventConfirmed(e.actorName ?? ''),
                 'rescheduled' => l.eventRescheduled(e.actorName ?? ''),
                 'on_hold' => l.eventOnHold(e.actorName ?? ''),
+                'follow_up' => l.eventFollowUp(e.actorName ?? ''),
                 _ => l.eventStatus(
                   e.actorName ?? '',
                   e.toStatus == null ? '' : statusLabel(l, e.toStatus!),
@@ -450,6 +467,25 @@ class JobDetailScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _bookVisit(BuildContext context, Job job) async {
+    final id = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _BookVisitSheet(job: job),
+    );
+    if (id != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).visitBooked)),
+      );
+      // Open the new visit (screens shown outside the router, as in tests,
+      // just stay where they are).
+      if (GoRouter.maybeOf(context) != null) {
+        context.push('/space/$spaceId/job/$id');
+      }
+    }
   }
 
   /// "Can't finish today": reason, note and date are all optional.
@@ -868,6 +904,139 @@ class _CantFinishSheetState extends ConsumerState<_CantFinishSheet> {
               icon: Icons.send,
               busy: _busy,
               onPressed: _busy ? null : _send,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// New visit for the same customer, address and team. Only the date is
+/// needed; the work description starts as the old one.
+class _BookVisitSheet extends ConsumerStatefulWidget {
+  const _BookVisitSheet({required this.job});
+  final Job job;
+
+  @override
+  ConsumerState<_BookVisitSheet> createState() => _BookVisitSheetState();
+}
+
+class _BookVisitSheetState extends ConsumerState<_BookVisitSheet> {
+  late final _title = TextEditingController(text: widget.job.title);
+  final _notes = TextEditingController();
+  late DateTime _at;
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final t = DateTime.now().add(const Duration(days: 1));
+    _at = DateTime(t.year, t.month, t.day, 10);
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pick() async {
+    final now = DateTime.now();
+    final d = await showDatePicker(
+      context: context,
+      initialDate: _at,
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (d == null || !mounted) return;
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_at),
+    );
+    if (!mounted) return;
+    setState(
+      () => _at = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        t?.hour ?? _at.hour,
+        t?.minute ?? _at.minute,
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    try {
+      final id = await ref
+          .read(jobsRepositoryProvider)
+          .bookFollowUp(
+            widget.job.id,
+            _at,
+            title: _title.text.trim(),
+            notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+          );
+      if (mounted) Navigator.pop(context, id);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).errorGeneric)),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final text = Theme.of(context).textTheme;
+    final locale = Localizations.localeOf(context).toString();
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        Tokens.s4,
+        0,
+        Tokens.s4,
+        MediaQuery.viewInsetsOf(context).bottom + Tokens.s4,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.bookVisit,
+              style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            Text(l.bookVisitHint, style: text.bodyMedium),
+            const SizedBox(height: Tokens.s3),
+            TextField(
+              controller: _title,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l.jobTitle),
+            ),
+            const SizedBox(height: Tokens.s3),
+            TextField(
+              controller: _notes,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: l.notesOptional),
+            ),
+            const SizedBox(height: Tokens.s3),
+            OutlinedButton.icon(
+              onPressed: _pick,
+              icon: const Icon(Icons.event),
+              label: Text(
+                '${DateFormat.MMMEd(locale).format(_at)}  ${clockTime(context, _at)}',
+              ),
+            ),
+            const SizedBox(height: Tokens.s4),
+            BigButton(
+              label: l.bookVisitSave,
+              icon: Icons.event_available,
+              busy: _busy,
+              onPressed: _busy ? null : _save,
             ),
           ],
         ),

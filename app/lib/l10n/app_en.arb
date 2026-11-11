@@ -922,5 +922,11 @@
   "importDone": "{count, plural, =1{1 item saved} other{{count} items saved}}",
   "@importDone": {"placeholders": {"count": {"type": "int"}}},
   "updateReady": "A new version is ready",
-  "updateNow": "Update"
+  "updateNow": "Update",
+  "bookVisit": "Book another visit",
+  "bookVisitHint": "Same customer, address and team. The new work gets its own bill.",
+  "bookVisitSave": "Book visit",
+  "visitBooked": "Visit booked. The team gets the usual alert.",
+  "eventFollowUp": "{actor} booked another visit",
+  "@eventFollowUp": {"placeholders": {"actor": {"type": "String"}}}
 }

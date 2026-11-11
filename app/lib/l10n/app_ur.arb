@@ -834,5 +834,11 @@
   "importDone": "{count} اشیاء محفوظ ہو گئیں",
   "@importDone": {"placeholders": {"count": {"type": "int"}}},
   "updateReady": "نیا ورژن تیار ہے",
-  "updateNow": "اپڈیٹ کریں"
+  "updateNow": "اپڈیٹ کریں",
+  "bookVisit": "ایک اور وزٹ بک کریں",
+  "bookVisitHint": "وہی گاہک، پتہ اور ٹیم۔ نئے کام کا بل الگ بنے گا۔",
+  "bookVisitSave": "وزٹ بک کریں",
+  "visitBooked": "وزٹ بک ہو گیا۔ ٹیم کو اطلاع جائے گی۔",
+  "eventFollowUp": "{actor} نے ایک اور وزٹ بک کیا",
+  "@eventFollowUp": {"placeholders": {"actor": {"type": "String"}}}
 }
