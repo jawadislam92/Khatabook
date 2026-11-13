@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:uuid/uuid.dart';
 
+import '../../core/offline/offline_sync.dart';
 import '../../core/config/app_config.dart';
 import '../jobs/jobs_models.dart';
 import '../jobs/jobs_repository.dart';
@@ -40,8 +41,12 @@ double _num(Object? v) => v == null ? 0 : num.parse(v.toString()).toDouble();
 int _int(Object? v) => v == null ? 0 : (v as num).toInt();
 
 class SupabaseInvoicesRepository implements InvoicesRepository {
-  SupabaseInvoicesRepository(this._c);
+  SupabaseInvoicesRepository(this._c, this._off) {
+    _off.registerSender('jobs.setItems', _sendSetItems);
+    _off.onSent(() => _local.add('*'));
+  }
   final sb.SupabaseClient _c;
+  final OfflineSync _off;
   final _local = StreamController<String>.broadcast();
 
   static const _select =
@@ -107,11 +112,16 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
 
   @override
   Future<List<JobItem>> jobItems(String jobId) async {
-    final rows = await _c
-        .from('job_items')
-        .select('*, items:item_id(unit)')
-        .eq('job_id', jobId)
-        .order('created_at');
+    final rows = offlineRows(
+      await _off.read(
+        'job_items:$jobId',
+        () => _c
+            .from('job_items')
+            .select('*, items:item_id(unit)')
+            .eq('job_id', jobId)
+            .order('created_at'),
+      ),
+    );
     return [
       for (final r in rows)
         JobItem(
@@ -133,31 +143,58 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
     String jobId,
     List<JobItem> items,
   ) async {
+    final params = {
+      'space_id': spaceId,
+      'job_id': jobId,
+      'items': [
+        for (final i in items)
+          {
+            'id': const Uuid().v4(),
+            'job_id': jobId,
+            'item_id': i.itemId,
+            'description': i.description.trim(),
+            'qty': i.qty,
+            'unit': i.unit,
+            'unit_price_paisa': i.unitPricePaisa,
+            'note': i.note,
+          },
+      ],
+    };
+    await _off.write<void>(
+      kind: 'jobs.setItems',
+      params: params,
+      now: () => _sendSetItems(params),
+      later: () {},
+    );
+    _local.add(spaceId);
+  }
+
+  /// Puts in the new lines (each with its own id, so a repeat cannot add
+  /// them twice) and removes every other line of the job.
+  Future<void> _sendSetItems(Map<String, dynamic> p) async {
     final uid = _c.auth.currentUser!.id;
-    final keep = <String>[];
+    final jobId = p['job_id'] as String;
+    final items = (p['items'] as List).cast<Map>();
+    final keep = [for (final i in items) i['id'] as String];
     if (items.isNotEmpty) {
-      final inserted = await _c
-          .from('job_items')
-          .insert([
-            for (final i in items)
-              {
-                'job_id': jobId,
-                'space_id': spaceId,
-                'item_id': i.itemId,
-                'description': i.description.trim(),
-                'qty': i.qty,
-                'unit_price_paisa': i.unitPricePaisa,
-                'note': i.note,
-                'created_by': uid,
-              },
-          ])
-          .select('id');
-      keep.addAll([for (final r in inserted) r['id'] as String]);
+      await _c.from('job_items').upsert([
+        for (final i in items)
+          {
+            'id': i['id'],
+            'job_id': jobId,
+            'space_id': p['space_id'],
+            'item_id': i['item_id'],
+            'description': i['description'],
+            'qty': i['qty'],
+            'unit_price_paisa': i['unit_price_paisa'],
+            'note': i['note'],
+            'created_by': uid,
+          },
+      ], onConflict: 'id');
     }
     var del = _c.from('job_items').delete().eq('job_id', jobId);
     if (keep.isNotEmpty) del = del.not('id', 'in', '(${keep.join(',')})');
     await del;
-    _local.add(spaceId);
   }
 
   @override
@@ -178,33 +215,48 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
 
   @override
   Future<Invoice?> invoice(String invoiceId) async {
-    final r = await _c
-        .from('invoices')
-        .select(_select)
-        .eq('id', invoiceId)
-        .maybeSingle();
+    final r = offlineRow(
+      await _off.read(
+        'invoice:$invoiceId',
+        () => _c
+            .from('invoices')
+            .select(_select)
+            .eq('id', invoiceId)
+            .maybeSingle(),
+      ),
+    );
     return r == null ? null : _invoice(r);
   }
 
   @override
   Future<Invoice?> invoiceForJob(String jobId) async {
-    final r = await _c
-        .from('invoices')
-        .select(_select)
-        .eq('job_id', jobId)
-        .neq('status', 'void')
-        .maybeSingle();
+    final r = offlineRow(
+      await _off.read(
+        'invoice_job:$jobId',
+        () => _c
+            .from('invoices')
+            .select(_select)
+            .eq('job_id', jobId)
+            .neq('status', 'void')
+            .maybeSingle(),
+      ),
+    );
     return r == null ? null : _invoice(r);
   }
 
   @override
   Future<List<Invoice>> invoices(String spaceId) async {
-    final rows = await _c
-        .from('invoices')
-        .select(_select)
-        .eq('space_id', spaceId)
-        .order('issued_at', ascending: false)
-        .limit(300);
+    final rows = offlineRows(
+      await _off.read(
+        'invoices:$spaceId',
+        () => _c
+            .from('invoices')
+            .select(_select)
+            .eq('space_id', spaceId)
+            .order('issued_at', ascending: false)
+            .limit(300),
+      ),
+    );
     return [for (final r in rows) _invoice(r)];
   }
 
@@ -241,11 +293,16 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
 
   @override
   Future<BusinessProfile?> businessProfile(String spaceId) async {
-    final r = await _c
-        .from('business_profiles')
-        .select()
-        .eq('space_id', spaceId)
-        .maybeSingle();
+    final r = offlineRow(
+      await _off.read(
+        'profile:$spaceId',
+        () => _c
+            .from('business_profiles')
+            .select()
+            .eq('space_id', spaceId)
+            .maybeSingle(),
+      ),
+    );
     if (r == null) return null;
     return BusinessProfile(
       spaceId: spaceId,
@@ -296,11 +353,16 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
 
   @override
   Future<InvoiceStats> stats(String spaceId) async {
-    final r = await _c
-        .from('invoice_stats')
-        .select()
-        .eq('space_id', spaceId)
-        .maybeSingle();
+    final r = offlineRow(
+      await _off.read(
+        'stats:$spaceId',
+        () => _c
+            .from('invoice_stats')
+            .select()
+            .eq('space_id', spaceId)
+            .maybeSingle(),
+      ),
+    );
     if (r == null) return InvoiceStats.zero;
     return InvoiceStats(
       unpaidCount: _int(r['unpaid_count']),
@@ -313,11 +375,16 @@ class SupabaseInvoicesRepository implements InvoicesRepository {
 
   @override
   Future<List<ItemUsage>> itemsUsedThisMonth(String spaceId) async {
-    final rows = await _c
-        .from('items_used_month')
-        .select()
-        .eq('space_id', spaceId)
-        .order('amount_paisa', ascending: false);
+    final rows = offlineRows(
+      await _off.read(
+        'items_used:$spaceId',
+        () => _c
+            .from('items_used_month')
+            .select()
+            .eq('space_id', spaceId)
+            .order('amount_paisa', ascending: false),
+      ),
+    );
     return [
       for (final r in rows)
         ItemUsage(
@@ -756,7 +823,10 @@ class PreviewInvoicesRepository implements InvoicesRepository {
 
 final invoicesRepositoryProvider = Provider<InvoicesRepository>((ref) {
   if (AppConfig.isConfigured) {
-    return SupabaseInvoicesRepository(sb.Supabase.instance.client);
+    return SupabaseInvoicesRepository(
+      sb.Supabase.instance.client,
+      ref.read(offlineSyncProvider),
+    );
   }
   return PreviewInvoicesRepository(
     ref.watch(jobsRepositoryProvider),

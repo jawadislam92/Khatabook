@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../core/offline/offline_sync.dart';
 import '../../core/config/app_config.dart';
 import '../ledger/ledger_repository.dart';
 import '../spaces/spaces_repository.dart';
@@ -20,16 +21,22 @@ abstract class GroupsRepository {
 }
 
 class SupabaseGroupsRepository implements GroupsRepository {
-  SupabaseGroupsRepository(this._c);
+  SupabaseGroupsRepository(this._c, this._off);
   final sb.SupabaseClient _c;
+  final OfflineSync _off;
 
   @override
   Future<List<Member>> members(String spaceId) async {
-    final rows = await _c
-        .from('space_member_stats')
-        .select()
-        .eq('space_id', spaceId)
-        .order('joined_at');
+    final rows = offlineRows(
+      await _off.read(
+        'members:$spaceId',
+        () => _c
+            .from('space_member_stats')
+            .select()
+            .eq('space_id', spaceId)
+            .order('joined_at'),
+      ),
+    );
     return [
       for (final r in rows)
         Member(
@@ -49,12 +56,17 @@ class SupabaseGroupsRepository implements GroupsRepository {
 
   @override
   Future<List<ActivityItem>> activity(String spaceId, {int limit = 100}) async {
-    final rows = await _c
-        .from('activity_feed')
-        .select()
-        .eq('space_id', spaceId)
-        .order('at', ascending: false)
-        .limit(limit);
+    final rows = offlineRows(
+      await _off.read(
+        'activity:$spaceId|$limit',
+        () => _c
+            .from('activity_feed')
+            .select()
+            .eq('space_id', spaceId)
+            .order('at', ascending: false)
+            .limit(limit),
+      ),
+    );
     return [
       for (final r in rows)
         ActivityItem(
@@ -123,15 +135,19 @@ class SupabaseGroupsRepository implements GroupsRepository {
 
   @override
   Future<DateTime?> lockedUntil(String spaceId) async {
-    final r = await _c
-        .from('books')
-        .select('locked_until')
-        .eq('space_id', spaceId)
-        .eq('is_default', true)
-        .single();
-    return r['locked_until'] == null
-        ? null
-        : DateTime.parse(r['locked_until'] as String);
+    final r = offlineRow(
+      await _off.read(
+        'lock:$spaceId',
+        () => _c
+            .from('books')
+            .select('locked_until')
+            .eq('space_id', spaceId)
+            .eq('is_default', true)
+            .single(),
+      ),
+    );
+    final until = r?['locked_until'] as String?;
+    return until == null ? null : DateTime.parse(until);
   }
 
   @override
@@ -343,7 +359,10 @@ class PreviewGroupsRepository implements GroupsRepository {
 
 final groupsRepositoryProvider = Provider<GroupsRepository>((ref) {
   if (AppConfig.isConfigured) {
-    return SupabaseGroupsRepository(sb.Supabase.instance.client);
+    return SupabaseGroupsRepository(
+      sb.Supabase.instance.client,
+      ref.read(offlineSyncProvider),
+    );
   }
   return PreviewGroupsRepository(ref.watch(ledgerRepositoryProvider));
 });

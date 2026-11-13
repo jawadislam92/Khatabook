@@ -8,11 +8,20 @@ import 'app.dart';
 import 'core/config/app_config.dart';
 import 'core/errors/error_reporter.dart';
 import 'core/net/timeout_client.dart';
+import 'core/offline/local_store.dart';
+import 'core/offline/offline_sync.dart';
 import 'core/settings/app_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
+  // Saved data and changes waiting to be sent live in the app's own folder
+  // on phones. The web build (testing only) keeps them in memory.
+  final offline = OfflineSync(
+    store: kIsWeb ? MemoryLocalStore() : await FileLocalStore.open(),
+    watchConnectivity: !kIsWeb,
+  );
+  await offline.start();
   ErrorReporter? reporter;
   if (AppConfig.isConfigured) {
     await Supabase.initialize(
@@ -55,11 +64,15 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        offlineSyncProvider.overrideWith((ref) => offline),
         sharedPreferencesProvider.overrideWithValue(prefs),
         errorReporterProvider.overrideWithValue(reporter),
       ],
       observers: [if (reporter != null) ErrorReportingObserver(reporter)],
-      retry: reporter?.retryAndReport,
+      retry:
+          reporter?.retryAndReport ??
+          (n, e) =>
+              e is OfflineNoData ? null : ProviderContainer.defaultRetry(n, e),
       child: const DuebookApp(),
     ),
   );

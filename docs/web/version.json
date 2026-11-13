@@ -1,6 +1,6 @@
 {
-  "build": 3,
-  "version": "1.1.1",
+  "build": 5,
+  "version": "1.2.1",
   "apk": "https://duebook.sparkingasia.com/duebook.apk",
-  "notes": "Book another visit, buttons no longer hide behind the phone's navigation bar, alerts for finished and moved jobs"
+  "notes": "Works without internet: shows saved data, keeps your changes and sends them when the internet is back"
 }

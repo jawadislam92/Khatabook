@@ -1,3 +1,5 @@
+import '../offline/offline_sync.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -75,6 +77,10 @@ class ErrorReporter {
   /// that can take minutes, so most failures were never reported. This rule
   /// sees every failure as it happens.
   Duration? retryAndReport(int retryCount, Object error) {
+    // No internet and nothing saved: retrying in a loop only keeps the
+    // spinner going. Show the message with Try again instead, and there is
+    // nothing to report.
+    if (error is OfflineNoData) return null;
     if (retryCount == 0) report('provider', error);
     return ProviderContainer.defaultRetry(retryCount, error);
   }

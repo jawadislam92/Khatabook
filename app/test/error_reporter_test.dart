@@ -1,4 +1,5 @@
 import 'package:duebook/core/errors/error_reporter.dart';
+import 'package:duebook/core/offline/offline_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -103,5 +104,11 @@ void main() {
     r.report('flutter', 'x');
     expect(sent, hasLength(1));
     expect(sent.single['screen'], isNull);
+  });
+
+  test('no internet and nothing saved is not retried or reported', () {
+    final r = make();
+    expect(r.retryAndReport(0, const OfflineNoData('jobs:b')), isNull);
+    expect(sent, isEmpty);
   });
 }

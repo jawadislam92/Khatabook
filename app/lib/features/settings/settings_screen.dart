@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/offline/offline_sync.dart';
 import '../../core/config/app_config.dart';
 import '../../core/security/app_lock.dart';
 import '../../core/security/pin_store.dart';
@@ -149,9 +150,13 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         content: Text(
-          (ref.read(currentUserProvider).value?.isGuest ?? false)
-              ? l.guestSignOutWarning
-              : l.signOutConfirm,
+          [
+            (ref.read(currentUserProvider).value?.isGuest ?? false)
+                ? l.guestSignOutWarning
+                : l.signOutConfirm,
+            if (ref.read(offlineSyncProvider).pending.isNotEmpty)
+              l.signOutPending(ref.read(offlineSyncProvider).pending.length),
+          ].join('\n\n'),
         ),
         actions: [
           TextButton(
@@ -170,6 +175,8 @@ class SettingsScreen extends ConsumerWidget {
     await ref.read(appSettingsProvider.notifier).resetSecurity();
     await ref.read(appLockProvider.notifier).pinWasCleared();
     await ref.read(authRepositoryProvider).signOut();
+    // The next person on this phone must not see this person's saved data.
+    await ref.read(offlineSyncProvider).clearAll();
   }
 }
 

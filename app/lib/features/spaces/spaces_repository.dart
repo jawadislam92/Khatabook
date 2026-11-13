@@ -1,3 +1,4 @@
+import '../../core/offline/offline_sync.dart';
 import '../auth/auth_repository.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,21 +34,27 @@ abstract class SpacesRepository {
 }
 
 class SupabaseSpacesRepository implements SpacesRepository {
-  SupabaseSpacesRepository(this._client);
+  SupabaseSpacesRepository(this._client, this._off);
   final sb.SupabaseClient _client;
+  final OfflineSync _off;
 
   @override
   Future<List<Space>> listMine() async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return const [];
-    final rows = await _client
-        .from('spaces')
-        .select(
-          'id, name, kind, business_enabled, deleted_at, space_members(user_id, role)',
-        )
-        .isFilter('deleted_at', null)
-        .order('kind')
-        .order('created_at');
+    final rows = offlineRows(
+      await _off.read(
+        'my_spaces:$uid',
+        () => _client
+            .from('spaces')
+            .select(
+              'id, name, kind, business_enabled, deleted_at, space_members(user_id, role)',
+            )
+            .isFilter('deleted_at', null)
+            .order('kind')
+            .order('created_at'),
+      ),
+    );
     return [
       for (final r in rows)
         () {
@@ -136,7 +143,10 @@ class PreviewSpacesRepository implements SpacesRepository {
 
 final spacesRepositoryProvider = Provider<SpacesRepository>((ref) {
   if (AppConfig.isConfigured) {
-    return SupabaseSpacesRepository(sb.Supabase.instance.client);
+    return SupabaseSpacesRepository(
+      sb.Supabase.instance.client,
+      ref.read(offlineSyncProvider),
+    );
   }
   return PreviewSpacesRepository();
 });

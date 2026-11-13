@@ -87,6 +87,27 @@ Branch: everything is on `claude/khatabook-field-service-plan-7dg24c`. There is 
 - **Local test login (web on this PC only).** `app/tool_build_local_web.sh` builds the web app with `DEV_AUTO_EMAIL`/`DEV_AUTO_PASSWORD` from `app/.env.qa`; it then signs in as the QA user by itself and skips the welcome and PIN screens. The rule (`devAutoSignInAllowed` in `app_config.dart`) only allows it on the web at localhost or 127.0.0.1; phones and normal builds ignore it (`test/dev_auto_sign_in_test.dart`). Never upload that build: it carries the QA password. Serve it with the `duebook-web` entry in `.claude/launch.json` (python http.server on 8099).
 - Node for the tools: `C:/laragon/bin/nodejs/node-v22`, with `NODE_PATH=/c/src/pwtools/node_modules`.
 
+### Offline mode (12 November, version 1.2.0, build 4; fix in 1.2.1, build 5)
+
+1.2.1 (13 November): when the phone already knows it is offline, `OfflineSync.read` now gives the server 2 seconds even when nothing is saved for that screen. Before, a screen never opened online (for example a person's entry list) waited forever and spun. Test: "offline, a screen with nothing saved never waits on a silent server". `tool_live_check.js` now taps only elements on screen.
+- **Why:** with no internet the app sat on a spinner after the fingerprint. Every request first refreshes the hourly sign-in token, and gotrue keeps retrying that with no network. Also nothing was kept on the phone.
+- **Core:** `lib/core/offline/`.
+  - `local_store.dart`: one JSON file per key in the app support folder; memory on web and in tests.
+  - `offline_sync.dart`: `OfflineSync`, provided by `offlineSyncProvider` and created in `main.dart`.
+  - `offline_strip.dart`: the bottom strip, plus the "Changes on this phone" list with Try again and Remove.
+- **Reads:** every Supabase repository read goes through `_off.read(key, fetch)`. Raw server rows are saved per key, such as `jobs:<space>|<from>|<to>`, `job:<id>`, `parties:<space>`, `balances:<space>`, `entries_party:<id>` and `my_spaces:<uid>`. With no internet, or no answer within 6 seconds when a copy exists, the saved copy is used. `OfflineNoData` means nothing is saved and there is no internet; it is not retried in a loop (see the `retry` rule in `main.dart` and `ErrorReporter.retryAndReport`).
+- **Writes kept and sent later:**
+  - Ledger: add or edit person, add entry, reminder and reminder done.
+  - Jobs: confirm, status steps, Can't finish today, reschedule, new job, book another visit, items on a job.
+  - Each kind has a sender registered in its repository constructor, and `app.dart` creates the three repositories at start so every sender is ready.
+  - Ids are made on the phone, so a repeat is harmless: inserts treat `23505` as done, and `create_job` and `book_follow_up` take `p_id` (migration `20261112000300_client_ids.sql`, test `12_client_ids_test.sql`, applied to dev and prod).
+  - While a change waits, overlays (`ledger_offline.dart`, `jobs_offline.dart`) lay it over the saved rows: balances, totals, lists and job status.
+  - Last change wins. A server refusal is kept and shown, never silently dropped.
+- **Internet only:** bills, payments, voiding, editing or cancelling an entry, invites, members, new books, catalogue edits and business profile. These show "This needs internet".
+- **Sign out** clears saved data and waiting changes, and warns first if anything is unsent.
+- **Checked on the emulator in airplane mode:** opens, entry added (balance updated), Start work and Can't finish today. With the internet back, everything reached dev once, in order.
+- Tests: `offline_sync_test.dart`, `offline_overlay_test.dart`.
+
 ### Book another visit, alert fix, navigation bar (11 November, version 1.1.1, build 3)
 - **Book another visit** on finished, billed and paid jobs (`book_follow_up`, migration `20261112000200_follow_up.sql`, test `11_follow_up_test.sql`). The installer on the job or a manager picks a date (default tomorrow 10 AM). It makes a new scheduled job with the same customer, address, notes and team, plus `follow_up_of`. The first job and its bill stay as they were. Managers get "Another visit booked".
 - **Alert fix, same migration:** `schedule_job_alerts` used to cancel every unsent alert for the job, including the one written just before. So "job finished", "job moved", "job cancelled" and the new visit alert never went out. It now resets only its own four reminder kinds. Both are applied to dev and prod, and `run_due_notifications` is deployed to both (same hash).

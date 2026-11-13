@@ -13,7 +13,12 @@ import 'core/theme/app_theme.dart';
 import 'core/push/push_service.dart';
 import 'core/theme/tokens.dart';
 import 'core/widgets/clear_of_system_bars.dart';
+import 'core/offline/offline_strip.dart';
 import 'features/auth/auth_repository.dart';
+import 'features/invoices/invoices_repository.dart';
+import 'features/jobs/jobs_repository.dart';
+import 'features/ledger/ledger_repository.dart';
+import 'core/offline/offline_sync.dart';
 import 'features/auth/pending_invite.dart';
 import 'features/groups/groups_models.dart';
 import 'l10n/app_localizations.dart';
@@ -44,6 +49,12 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
           ? top.matches.uri.path
           : config.uri.path;
     };
+    // Every part that sends waiting changes must be ready from the start,
+    // or changes of a kind whose screen was not opened yet would sit there.
+    ref.read(ledgerRepositoryProvider);
+    ref.read(jobsRepositoryProvider);
+    ref.read(invoicesRepositoryProvider);
+    unawaited(ref.read(offlineSyncProvider).flush());
     // Invite links open the join screen. Auth callbacks are handled by Supabase itself.
     try {
       final appLinks = AppLinks();
@@ -117,7 +128,14 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
           data: mq.copyWith(
             textScaler: TextScaler.linear(factor.clamp(0.8, 2.0)),
           ),
-          child: ClearOfSystemBars(child: child ?? const SizedBox.shrink()),
+          child: ClearOfSystemBars(
+            child: Column(
+              children: [
+                Expanded(child: child ?? const SizedBox.shrink()),
+                const OfflineStrip(),
+              ],
+            ),
+          ),
         );
       },
     );

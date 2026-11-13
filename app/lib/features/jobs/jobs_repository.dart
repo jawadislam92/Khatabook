@@ -4,6 +4,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
+
+import '../../core/offline/offline_sync.dart';
+import 'jobs_offline.dart';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/app_config.dart';
@@ -50,8 +54,24 @@ abstract class JobsRepository {
 String _ts(DateTime d) => d.toUtc().toIso8601String();
 
 class SupabaseJobsRepository implements JobsRepository {
-  SupabaseJobsRepository(this._c);
+  SupabaseJobsRepository(this._c, this._off) {
+    _off.registerSender('jobs.create', _sendCreate);
+    _off.registerSender('jobs.followUp', _sendFollowUp);
+    _off.registerSender('jobs.confirm', _sendConfirm);
+    _off.registerSender('jobs.setStatus', _sendSetStatus);
+    _off.registerSender('jobs.reschedule', _sendReschedule);
+    _off.registerSender(
+      'jobs.reportProblem',
+      _sendReportProblem,
+      // Sent twice, or someone else stopped it first: either way it is done.
+      done: (e, _) => '$e'.contains('still open'),
+    );
+    _off.registerOverlay(jobsOverlay);
+    _off.onSent(() => _local.add('*'));
+  }
   final sb.SupabaseClient _c;
+  final OfflineSync _off;
+  String get _me => _c.auth.currentUser?.id ?? '';
   final _local = StreamController<String>.broadcast();
 
   static const _select =
@@ -91,30 +111,40 @@ class SupabaseJobsRepository implements JobsRepository {
 
   @override
   Future<List<Job>> jobs(String spaceId, {DateTime? from, DateTime? to}) async {
-    var q = _c.from('jobs').select(_select).eq('space_id', spaceId);
-    if (from != null) q = q.gte('scheduled_at', _ts(from));
-    if (to != null) q = q.lt('scheduled_at', _ts(to));
-    final rows = await q.order('scheduled_at');
+    final key =
+        'jobs:$spaceId|${from == null ? '' : _ts(from)}|${to == null ? '' : _ts(to)}';
+    final rows = offlineRows(
+      await _off.read(key, () {
+        var q = _c.from('jobs').select(_select).eq('space_id', spaceId);
+        if (from != null) q = q.gte('scheduled_at', _ts(from));
+        if (to != null) q = q.lt('scheduled_at', _ts(to));
+        return q.order('scheduled_at');
+      }),
+    );
     return [for (final r in rows) _job(r)];
   }
 
   @override
   Future<Job?> job(String jobId) async {
-    final r = await _c
-        .from('jobs')
-        .select(_select)
-        .eq('id', jobId)
-        .maybeSingle();
-    return r == null ? null : _job(r);
+    final r = await _off.read(
+      'job:$jobId',
+      () => _c.from('jobs').select(_select).eq('id', jobId).maybeSingle(),
+    );
+    return r == null ? null : _job(Map<String, dynamic>.from(r as Map));
   }
 
   @override
   Future<List<JobEvent>> events(String jobId) async {
-    final rows = await _c
-        .from('job_events')
-        .select('*, profiles:actor_id(display_name)')
-        .eq('job_id', jobId)
-        .order('at');
+    final rows = offlineRows(
+      await _off.read(
+        'events:$jobId',
+        () => _c
+            .from('job_events')
+            .select('*, profiles:actor_id(display_name)')
+            .eq('job_id', jobId)
+            .order('at'),
+      ),
+    );
     return [
       for (final r in rows)
         JobEvent(
@@ -132,49 +162,135 @@ class SupabaseJobsRepository implements JobsRepository {
     ];
   }
 
+  /// The saved row of a job, from its own screen or any saved list.
+  Future<Map<String, dynamic>?> _savedJob(String jobId) async {
+    final one = await _off.saved('job:$jobId');
+    if (one is Map) return Map<String, dynamic>.from(one);
+    return null;
+  }
+
   @override
   Future<String> createJob(NewJob j) async {
-    final id = await _c.rpc<String>(
-      'create_job',
-      params: {
-        'p_space': j.spaceId,
-        'p_customer': j.customerId,
-        'p_title': j.title.trim(),
-        'p_type': j.type.db,
-        'p_scheduled_at': _ts(j.scheduledAt),
-        'p_assignees': j.assigneeIds,
-        'p_address': j.address,
-        'p_notes': j.notes,
-        'p_estimate_paisa': j.estimatePaisa,
+    // Names to show while the job waits, from what is saved on the phone.
+    final parties = offlineRows(await _off.saved('parties:${j.spaceId}'));
+    final members = offlineRows(await _off.saved('members:${j.spaceId}'));
+    final party = parties.where((r) => r['id'] == j.customerId).firstOrNull;
+    final params = {
+      'id': const Uuid().v4(),
+      'space_id': j.spaceId,
+      'customer_id': j.customerId,
+      'title': j.title.trim(),
+      'job_type': j.type.db,
+      'scheduled_at': _ts(j.scheduledAt),
+      'address': j.address,
+      'notes': j.notes,
+      'estimate_paisa': j.estimatePaisa,
+      'created_by': _me,
+      'created_at': _ts(DateTime.now()),
+      'customer_name': party?['name'] ?? '',
+      'customer_phone': party?['phone_display'],
+      'assignees': [
+        for (final id in j.assigneeIds)
+          {
+            'user_id': id,
+            'name':
+                members
+                    .where((m) => m['user_id'] == id)
+                    .firstOrNull?['display_name'] ??
+                '',
+          },
+      ],
+    };
+    final id = await _off.write<String>(
+      kind: 'jobs.create',
+      params: params,
+      now: () async {
+        await _sendCreate(params);
+        return params['id'] as String;
       },
+      later: () => params['id'] as String,
     );
     _local.add(j.spaceId);
     return id;
   }
 
-  @override
-  Future<void> confirm(String jobId) async {
-    await _c.rpc<void>('confirm_job', params: {'p_job': jobId});
-    _local.add('*');
-  }
+  Future<void> _sendCreate(Map<String, dynamic> p) => _c.rpc<String>(
+    'create_job',
+    params: {
+      'p_space': p['space_id'],
+      'p_customer': p['customer_id'],
+      'p_title': p['title'],
+      'p_type': p['job_type'],
+      'p_scheduled_at': p['scheduled_at'],
+      'p_assignees': [
+        for (final a in p['assignees'] as List) (a as Map)['user_id'],
+      ],
+      'p_address': p['address'],
+      'p_notes': p['notes'],
+      'p_estimate_paisa': p['estimate_paisa'],
+      'p_id': p['id'],
+    },
+  );
 
-  @override
-  Future<void> setStatus(String jobId, JobStatus status, {String? note}) async {
-    await _c.rpc<void>(
-      'set_job_status',
-      params: {'p_job': jobId, 'p_status': status.db, 'p_note': note},
+  Future<void> _step(String kind, Map<String, dynamic> params) async {
+    await _off.write<void>(
+      kind: kind,
+      params: params,
+      now: () async {
+        final send = switch (kind) {
+          'jobs.confirm' => _sendConfirm,
+          'jobs.setStatus' => _sendSetStatus,
+          'jobs.reschedule' => _sendReschedule,
+          _ => _sendReportProblem,
+        };
+        await send(params);
+      },
+      later: () {},
     );
     _local.add('*');
   }
 
   @override
-  Future<void> reschedule(String jobId, DateTime at, {String? note}) async {
-    await _c.rpc<void>(
-      'reschedule_job',
-      params: {'p_job': jobId, 'p_scheduled_at': _ts(at), 'p_note': note},
-    );
-    _local.add('*');
-  }
+  Future<void> confirm(String jobId) => _step('jobs.confirm', {
+    'job_id': jobId,
+    'user_id': _me,
+    'at': _ts(DateTime.now()),
+  });
+
+  Future<void> _sendConfirm(Map<String, dynamic> p) =>
+      _c.rpc<void>('confirm_job', params: {'p_job': p['job_id']});
+
+  @override
+  Future<void> setStatus(String jobId, JobStatus status, {String? note}) =>
+      _step('jobs.setStatus', {
+        'job_id': jobId,
+        'status': status.db,
+        'note': note,
+      });
+
+  Future<void> _sendSetStatus(Map<String, dynamic> p) => _c.rpc<void>(
+    'set_job_status',
+    params: {
+      'p_job': p['job_id'],
+      'p_status': p['status'],
+      'p_note': p['note'],
+    },
+  );
+
+  @override
+  Future<void> reschedule(String jobId, DateTime at, {String? note}) => _step(
+    'jobs.reschedule',
+    {'job_id': jobId, 'scheduled_at': _ts(at), 'note': note},
+  );
+
+  Future<void> _sendReschedule(Map<String, dynamic> p) => _c.rpc<void>(
+    'reschedule_job',
+    params: {
+      'p_job': p['job_id'],
+      'p_scheduled_at': p['scheduled_at'],
+      'p_note': p['note'],
+    },
+  );
 
   @override
   Future<String> bookFollowUp(
@@ -183,18 +299,42 @@ class SupabaseJobsRepository implements JobsRepository {
     String? title,
     String? notes,
   }) async {
-    final id = await _c.rpc<String>(
-      'book_follow_up',
-      params: {
-        'p_job': jobId,
-        'p_scheduled_at': _ts(at),
-        'p_title': title,
-        'p_notes': notes,
+    final base =
+        await _savedJob(jobId) ??
+        {'id': jobId, 'space_id': '', 'title': title ?? ''};
+    final params = followUpParams(
+      base: base,
+      id: const Uuid().v4(),
+      scheduledAt: _ts(at),
+      createdBy: _me,
+      title: title,
+      notes: notes,
+    );
+    params['given_title'] = title;
+    params['given_notes'] = notes;
+    final id = await _off.write<String>(
+      kind: 'jobs.followUp',
+      params: params,
+      now: () async {
+        await _sendFollowUp(params);
+        return params['id'] as String;
       },
+      later: () => params['id'] as String,
     );
     _local.add('*');
     return id;
   }
+
+  Future<void> _sendFollowUp(Map<String, dynamic> p) => _c.rpc<String>(
+    'book_follow_up',
+    params: {
+      'p_job': p['job_id'],
+      'p_scheduled_at': p['scheduled_at'],
+      'p_title': p['given_title'],
+      'p_notes': p['given_notes'],
+      'p_id': p['id'],
+    },
+  );
 
   @override
   Future<void> reportProblem(
@@ -202,18 +342,22 @@ class SupabaseJobsRepository implements JobsRepository {
     String? reason,
     String? note,
     DateTime? suggestedAt,
-  }) async {
-    await _c.rpc<void>(
-      'report_job_problem',
-      params: {
-        'p_job': jobId,
-        'p_reason': reason,
-        'p_note': note,
-        'p_suggested_at': suggestedAt == null ? null : _ts(suggestedAt),
-      },
-    );
-    _local.add('*');
-  }
+  }) => _step('jobs.reportProblem', {
+    'job_id': jobId,
+    'reason': reason,
+    'note': note,
+    'suggested_at': suggestedAt == null ? null : _ts(suggestedAt),
+  });
+
+  Future<void> _sendReportProblem(Map<String, dynamic> p) => _c.rpc<void>(
+    'report_job_problem',
+    params: {
+      'p_job': p['job_id'],
+      'p_reason': p['reason'],
+      'p_note': p['note'],
+      'p_suggested_at': p['suggested_at'],
+    },
+  );
 
   @override
   Future<void> setAssignees(String jobId, List<String> userIds) async {
@@ -243,12 +387,16 @@ class SupabaseJobsRepository implements JobsRepository {
     String spaceId, {
     bool includeInactive = false,
   }) async {
-    var q = _c.from('items_visible').select().eq('space_id', spaceId);
-    if (!includeInactive) q = q.eq('active', true);
-    final rows = await q
-        .order('is_favourite', ascending: false)
-        .order('sort_order')
-        .order('name_en');
+    final rows = offlineRows(
+      await _off.read('catalog:$spaceId|$includeInactive', () {
+        var q = _c.from('items_visible').select().eq('space_id', spaceId);
+        if (!includeInactive) q = q.eq('active', true);
+        return q
+            .order('is_favourite', ascending: false)
+            .order('sort_order')
+            .order('name_en');
+      }),
+    );
     return [for (final r in rows) _item(r)];
   }
 
@@ -294,11 +442,16 @@ class SupabaseJobsRepository implements JobsRepository {
 
   @override
   Future<List<AppNotification>> notifications() async {
-    final rows = await _c
-        .from('notifications')
-        .select()
-        .order('created_at', ascending: false)
-        .limit(100);
+    final rows = offlineRows(
+      await _off.read(
+        'notifications',
+        () => _c
+            .from('notifications')
+            .select()
+            .order('created_at', ascending: false)
+            .limit(100),
+      ),
+    );
     return [
       for (final r in rows)
         AppNotification(
@@ -864,7 +1017,10 @@ class PreviewJobsRepository implements JobsRepository {
 
 final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
   if (AppConfig.isConfigured) {
-    return SupabaseJobsRepository(sb.Supabase.instance.client);
+    return SupabaseJobsRepository(
+      sb.Supabase.instance.client,
+      ref.read(offlineSyncProvider),
+    );
   }
   return PreviewJobsRepository(ref.watch(ledgerRepositoryProvider));
 });

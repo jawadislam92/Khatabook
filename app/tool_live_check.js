@@ -18,7 +18,7 @@ async function findText(page, text) {
     const els = [...document.querySelectorAll('flt-semantics, input, textarea')]
       .filter(e => (e.textContent || '').includes(t) || (e.getAttribute('aria-label') || '').includes(t))
       .map(e => ({ r: e.getBoundingClientRect(), pri: (e.getAttribute('role') === 'button' || e.tagName === 'INPUT') ? 0 : 1 }))
-      .filter(x => x.r.width > 0 && x.r.height > 0)
+      .filter(x => x.r.width > 0 && x.r.height > 0 && x.r.top >= 0 && x.r.bottom <= window.innerHeight)
       .sort((a, b) => a.pri - b.pri || a.r.width * a.r.height - b.r.width * b.r.height).map(x => x.r);
     return els.length ? { x: els[0].x + els[0].width / 2, y: els[0].y + els[0].height / 2 } : null;
   }, text);

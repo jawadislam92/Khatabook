@@ -5,7 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/app_config.dart';
+import '../../core/offline/offline_sync.dart';
 import 'ledger_models.dart';
+import 'ledger_offline.dart';
 
 abstract class LedgerRepository {
   Future<List<PartyBalance>> partiesWithBalances(String spaceId);
@@ -43,9 +45,26 @@ String _date(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 class SupabaseLedgerRepository implements LedgerRepository {
-  SupabaseLedgerRepository(this._c);
+  SupabaseLedgerRepository(this._c, this._off) {
+    _off.registerSender('ledger.addParty', _sendAddParty, done: isDuplicateKey);
+    _off.registerSender('ledger.updateParty', _sendUpdateParty);
+    _off.registerSender('ledger.addEntry', _sendAddEntry, done: isDuplicateKey);
+    _off.registerSender(
+      'ledger.setReminder',
+      _sendSetReminder,
+      done: isDuplicateKey,
+    );
+    _off.registerSender('ledger.reminderDone', _sendReminderDone);
+    _off.registerOverlay(ledgerOverlay);
+    _off.onSent(() => _local.add('*'));
+  }
   final sb.SupabaseClient _c;
+  final OfflineSync _off;
   final _local = StreamController<String>.broadcast();
+
+  String get _me => _c.auth.currentUser?.id ?? '';
+  String? get _myName =>
+      _c.auth.currentUser?.userMetadata?['display_name'] as String?;
 
   Party _party(Map<String, dynamic> r) => Party(
     id: r['id'] as String,
@@ -91,27 +110,37 @@ class SupabaseLedgerRepository implements LedgerRepository {
   );
 
   Future<String> _defaultBook(String spaceId) async {
-    final r = await _c
-        .from('books')
-        .select('id')
-        .eq('space_id', spaceId)
-        .eq('is_default', true)
-        .single();
-    return r['id'] as String;
+    final r = await _off.read(
+      'book:$spaceId',
+      () => _c
+          .from('books')
+          .select('id')
+          .eq('space_id', spaceId)
+          .eq('is_default', true)
+          .single(),
+    );
+    return (r as Map)['id'] as String;
   }
 
   @override
   Future<List<PartyBalance>> partiesWithBalances(String spaceId) async {
-    final parties = await _c
-        .from('parties')
-        .select()
-        .eq('space_id', spaceId)
-        .isFilter('deleted_at', null)
-        .order('name');
-    final balances = await _c
-        .from('party_balances')
-        .select()
-        .eq('space_id', spaceId);
+    final parties = offlineRows(
+      await _off.read(
+        'parties:$spaceId',
+        () => _c
+            .from('parties')
+            .select()
+            .eq('space_id', spaceId)
+            .isFilter('deleted_at', null)
+            .order('name'),
+      ),
+    );
+    final balances = offlineRows(
+      await _off.read(
+        'balances:$spaceId',
+        () => _c.from('party_balances').select().eq('space_id', spaceId),
+      ),
+    );
     final byId = {for (final b in balances) b['party_id'] as String: b};
     return [
       for (final p in parties)
@@ -129,11 +158,29 @@ class SupabaseLedgerRepository implements LedgerRepository {
 
   @override
   Future<SpaceTotals> totals(String spaceId) async {
-    final r = await _c
-        .from('space_totals')
-        .select()
-        .eq('space_id', spaceId)
-        .maybeSingle();
+    // Entries waiting to be sent change the totals: work them out from the
+    // balances, which already include those entries.
+    if (_off.pending.any(
+      (c) =>
+          !c.failed &&
+          c.kind == 'ledger.addEntry' &&
+          c.params['space_id'] == spaceId,
+    )) {
+      var get = 0, give = 0;
+      for (final pb in await partiesWithBalances(spaceId)) {
+        if (pb.balancePaisa > 0) get += pb.balancePaisa;
+        if (pb.balancePaisa < 0) give -= pb.balancePaisa;
+      }
+      return SpaceTotals(willGetPaisa: get, willGivePaisa: give);
+    }
+    final r = await _off.read(
+      'totals:$spaceId',
+      () => _c
+          .from('space_totals')
+          .select()
+          .eq('space_id', spaceId)
+          .maybeSingle(),
+    ) as Map?;
     if (r == null) return SpaceTotals.zero;
     return SpaceTotals(
       willGetPaisa: (r['will_get_paisa'] as num).toInt(),
@@ -148,48 +195,80 @@ class SupabaseLedgerRepository implements LedgerRepository {
     String? phone,
     bool isCustomer = false,
   }) async {
-    final r = await _c
-        .from('parties')
-        .insert({
-          'space_id': spaceId,
-          'name': name.trim(),
-          'phone_display': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
-          'is_customer': isCustomer,
-          'created_by': _c.auth.currentUser!.id,
-        })
-        .select()
-        .single();
+    final row = {
+      'id': const Uuid().v4(),
+      'space_id': spaceId,
+      'name': name.trim(),
+      'phone_display': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
+      'is_customer': isCustomer,
+      'created_by': _me,
+    };
+    final p = await _off.write<Party>(
+      kind: 'ledger.addParty',
+      params: row,
+      now: () async =>
+          _party(await _c.from('parties').insert(row).select().single()),
+      later: () => _party(row),
+    );
     _local.add(spaceId);
-    return _party(r);
+    return p;
   }
+
+  Future<void> _sendAddParty(Map<String, dynamic> row) =>
+      _c.from('parties').insert(row);
 
   @override
   Future<Party> updateParty(Party party) async {
-    final r = await _c
-        .from('parties')
-        .update({
-          'name': party.name.trim(),
-          'phone_display': party.phone,
-          'address': party.address,
-          'notes': party.notes,
-        })
-        .eq('id', party.id)
-        .select()
-        .single();
+    final params = {
+      'id': party.id,
+      'space_id': party.spaceId,
+      'name': party.name.trim(),
+      'phone_display': party.phone,
+      'address': party.address,
+      'notes': party.notes,
+    };
+    final p = await _off.write<Party>(
+      kind: 'ledger.updateParty',
+      params: params,
+      now: () async => _party(
+        await _c
+            .from('parties')
+            .update(_partyPatch(params))
+            .eq('id', party.id)
+            .select()
+            .single(),
+      ),
+      later: () => party.copyWith(name: party.name.trim()),
+    );
     _local.add(party.spaceId);
-    return _party(r);
+    return p;
   }
+
+  static Map<String, dynamic> _partyPatch(Map<String, dynamic> p) => {
+    'name': p['name'],
+    'phone_display': p['phone_display'],
+    'address': p['address'],
+    'notes': p['notes'],
+  };
+
+  Future<void> _sendUpdateParty(Map<String, dynamic> p) =>
+      _c.from('parties').update(_partyPatch(p)).eq('id', p['id'] as String);
 
   static const _entrySelect = '*, profiles:created_by(display_name)';
 
   @override
   Future<List<Entry>> entriesForParty(String partyId) async {
-    final rows = await _c
-        .from('entries')
-        .select(_entrySelect)
-        .eq('party_id', partyId)
-        .order('entry_date', ascending: false)
-        .order('created_at', ascending: false);
+    final rows = offlineRows(
+      await _off.read(
+        'entries_party:$partyId',
+        () => _c
+            .from('entries')
+            .select(_entrySelect)
+            .eq('party_id', partyId)
+            .order('entry_date', ascending: false)
+            .order('created_at', ascending: false),
+      ),
+    );
     return [for (final r in rows) _entry(r)];
   }
 
@@ -199,34 +278,77 @@ class SupabaseLedgerRepository implements LedgerRepository {
     DateTime? from,
     DateTime? to,
   }) async {
-    var q = _c.from('entries').select(_entrySelect).eq('space_id', spaceId);
-    if (from != null) q = q.gte('entry_date', _date(from));
-    if (to != null) q = q.lte('entry_date', _date(to));
-    final rows = await q
-        .order('entry_date', ascending: false)
-        .order('created_at', ascending: false);
+    final key =
+        'entries_space:$spaceId:${from == null ? '' : _date(from)}:${to == null ? '' : _date(to)}';
+    final rows = offlineRows(
+      await _off.read(key, () {
+        var q = _c.from('entries').select(_entrySelect).eq('space_id', spaceId);
+        if (from != null) q = q.gte('entry_date', _date(from));
+        if (to != null) q = q.lte('entry_date', _date(to));
+        return q
+            .order('entry_date', ascending: false)
+            .order('created_at', ascending: false);
+      }),
+    );
     return [for (final r in rows) _entry(r)];
   }
 
   @override
   Future<Entry> addEntry(NewEntry e) async {
-    final book = await _defaultBook(e.spaceId);
-    final r = await _c
-        .from('entries')
-        .insert({
-          'space_id': e.spaceId,
-          'book_id': book,
-          'party_id': e.partyId,
-          'direction': e.direction.name,
-          'amount_paisa': e.amountPaisa,
-          'entry_date': _date(e.entryDate),
-          'note': e.note?.trim().isEmpty ?? true ? null : e.note!.trim(),
-          'created_by': _c.auth.currentUser!.id,
-        })
-        .select(_entrySelect)
-        .single();
+    final params = {
+      'id': const Uuid().v4(),
+      'space_id': e.spaceId,
+      'party_id': e.partyId,
+      'direction': e.direction.name,
+      'amount_paisa': e.amountPaisa,
+      'entry_date': _date(e.entryDate),
+      'note': e.note?.trim().isEmpty ?? true ? null : e.note!.trim(),
+      'created_by': _me,
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+      'created_by_name': _myName,
+    };
+    final entry = await _off.write<Entry>(
+      kind: 'ledger.addEntry',
+      params: params,
+      now: () async {
+        final book = await _defaultBook(e.spaceId);
+        return _entry(
+          await _c
+              .from('entries')
+              .insert(_entryInsert(params, book))
+              .select(_entrySelect)
+              .single(),
+        );
+      },
+      later: () async {
+        final book = await _off.saved('book:${e.spaceId}');
+        return _entry(
+          pendingEntryRow(params, book is Map ? book['id'] as String : ''),
+        );
+      },
+    );
     _local.add(e.spaceId);
-    return _entry(r);
+    return entry;
+  }
+
+  static Map<String, dynamic> _entryInsert(
+    Map<String, dynamic> p,
+    String book,
+  ) => {
+    'id': p['id'],
+    'space_id': p['space_id'],
+    'book_id': book,
+    'party_id': p['party_id'],
+    'direction': p['direction'],
+    'amount_paisa': p['amount_paisa'],
+    'entry_date': p['entry_date'],
+    'note': p['note'],
+    'created_by': p['created_by'],
+  };
+
+  Future<void> _sendAddEntry(Map<String, dynamic> p) async {
+    final book = await _defaultBook(p['space_id'] as String);
+    await _c.from('entries').insert(_entryInsert(p, book));
   }
 
   @override
@@ -260,12 +382,17 @@ class SupabaseLedgerRepository implements LedgerRepository {
 
   @override
   Future<List<Reminder>> reminders(String spaceId) async {
-    final rows = await _c
-        .from('reminders')
-        .select()
-        .eq('space_id', spaceId)
-        .isFilter('done_at', null)
-        .order('due_date');
+    final rows = offlineRows(
+      await _off.read(
+        'reminders:$spaceId',
+        () => _c
+            .from('reminders')
+            .select()
+            .eq('space_id', spaceId)
+            .isFilter('done_at', null)
+            .order('due_date'),
+      ),
+    );
     return [for (final r in rows) _reminder(r)];
   }
 
@@ -276,29 +403,47 @@ class SupabaseLedgerRepository implements LedgerRepository {
     DateTime dueDate, {
     String? note,
   }) async {
-    final r = await _c
-        .from('reminders')
-        .insert({
-          'space_id': spaceId,
-          'party_id': partyId,
-          'due_date': _date(dueDate),
-          'note': note,
-          'created_by': _c.auth.currentUser!.id,
-        })
-        .select()
-        .single();
+    final row = {
+      'id': const Uuid().v4(),
+      'space_id': spaceId,
+      'party_id': partyId,
+      'due_date': _date(dueDate),
+      'note': note,
+      'created_by': _me,
+    };
+    final r = await _off.write<Reminder>(
+      kind: 'ledger.setReminder',
+      params: row,
+      now: () async =>
+          _reminder(await _c.from('reminders').insert(row).select().single()),
+      later: () => _reminder(row),
+    );
     _local.add(spaceId);
-    return _reminder(r);
+    return r;
   }
+
+  Future<void> _sendSetReminder(Map<String, dynamic> row) =>
+      _c.from('reminders').insert(row);
 
   @override
   Future<void> markReminderDone(String reminderId) async {
-    await _c
-        .from('reminders')
-        .update({'done_at': DateTime.now().toUtc().toIso8601String()})
-        .eq('id', reminderId);
+    final params = {
+      'id': reminderId,
+      'done_at': DateTime.now().toUtc().toIso8601String(),
+    };
+    await _off.write<void>(
+      kind: 'ledger.reminderDone',
+      params: params,
+      now: () => _sendReminderDone(params),
+      later: () {},
+    );
     _local.add('*');
   }
+
+  Future<void> _sendReminderDone(Map<String, dynamic> p) => _c
+      .from('reminders')
+      .update({'done_at': p['done_at']})
+      .eq('id', p['id'] as String);
 
   @override
   Stream<void> changes(String spaceId) {
@@ -658,7 +803,10 @@ class PreviewLedgerRepository implements LedgerRepository {
 
 final ledgerRepositoryProvider = Provider<LedgerRepository>((ref) {
   if (AppConfig.isConfigured) {
-    return SupabaseLedgerRepository(sb.Supabase.instance.client);
+    return SupabaseLedgerRepository(
+      sb.Supabase.instance.client,
+      ref.read(offlineSyncProvider),
+    );
   }
   return PreviewLedgerRepository();
 });

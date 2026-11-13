@@ -1,3 +1,5 @@
+import '../../core/offline/offline_sync.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/tokens.dart';
@@ -38,6 +40,7 @@ Color invoiceStatusColor(InvoiceStatus s) => switch (s) {
 
 /// Turns a database error into the short message the person should read.
 String friendlyError(AppLocalizations l, Object e) {
+  if (isOfflineError(e)) return l.needsInternet;
   final s = e.toString();
   if (s.contains('at least one item')) return l.needOneItem;
   if (s.contains('Discount cannot exceed')) return l.discountTooBig;
