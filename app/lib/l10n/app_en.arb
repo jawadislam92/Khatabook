@@ -418,6 +418,18 @@
     }
   },
   "remove": "Remove",
+  "deleteGroup": "Delete this group",
+  "deleteGroupTitle": "Delete {space}?",
+  "@deleteGroupTitle": {"placeholders": {"space": {"type": "String"}}},
+  "deleteGroupWarning": "All its customers, entries, jobs and bills will disappear. You cannot bring it back in the app.",
+  "deleteGroupOthers": "{count, plural, =1{1 other person will lose it too.} other{{count} other people will lose it too.}}",
+  "@deleteGroupOthers": {"placeholders": {"count": {"type": "int"}}},
+  "deleteGroupPin": "Enter your PIN to delete",
+  "deleteGroupName": "Type the group name to delete",
+  "deleteGroupNameWrong": "The name is not the same.",
+  "deleteGroupYes": "Delete",
+  "groupDeleted": "Group deleted",
+  "lastOwnerLeave": "You are the only owner, so you cannot leave. Make someone else the owner first, or delete the group.",
   "leaveGroup": "Leave this group",
   "leaveConfirm": "Leave {space}? You will need a new invite to come back.",
   "@leaveConfirm": {

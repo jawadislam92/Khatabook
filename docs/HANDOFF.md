@@ -87,6 +87,12 @@ Branch: everything is on `claude/khatabook-field-service-plan-7dg24c`. There is 
 - **Local test login (web on this PC only).** `app/tool_build_local_web.sh` builds the web app with `DEV_AUTO_EMAIL`/`DEV_AUTO_PASSWORD` from `app/.env.qa`; it then signs in as the QA user by itself and skips the welcome and PIN screens. The rule (`devAutoSignInAllowed` in `app_config.dart`) only allows it on the web at localhost or 127.0.0.1; phones and normal builds ignore it (`test/dev_auto_sign_in_test.dart`). Never upload that build: it carries the QA password. Serve it with the `duebook-web` entry in `.claude/launch.json` (python http.server on 8099).
 - Node for the tools: `C:/laragon/bin/nodejs/node-v22`, with `NODE_PATH=/c/src/pwtools/node_modules`.
 
+### Delete a group (25 November, version 1.3.1, build 7)
+Reported: Leave this group said "Something went wrong". Cause: the only owner cannot leave (trigger `protect_last_owner`), and the app hid the reason.
+- Migration `20261126000100_delete_space.sql`, test `14_delete_space_test.sql`: `delete_space` (owner only) sets `spaces.deleted_at`, cancels waiting alerts, removes inbox rows and open invites. `is_member`, `member_role_in` and `is_job_assignee` ignore deleted spaces, so everything in it is hidden for everyone. Rows are kept; to restore: `update public.spaces set deleted_at = null where id = ...`.
+- App: `delete_group_dialog.dart` asks for the PIN (the group name when no PIN is set). Leave explains the only-owner rule, and is hidden when you are alone in the group.
+- Migration is on dev and prod. The 1.3.1 APK and version.json still have to be uploaded to Hostinger.
+
 ### Job alerts that reach phones, and alert settings (25 November, version 1.3.0, build 6)
 Reported: assigned people got no alert unless they opened the app. Cause: the family APKs 1.0 to 1.2.1 were built without `FIREBASE_ENABLED=true` and without `google-services.json`, so phones never registered (prod had one row in `devices`). **Every family APK must be built with both**, and must be checked by seeing a new `devices` row.
 - App: `core/push/` registers per person, re-checks on resume, shows alerts while open, shows a card when alerts are off or registration failed, unregisters on sign out. `MainActivity.kt` makes the `duebook_jobs` channel (high importance).

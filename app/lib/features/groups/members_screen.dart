@@ -10,7 +10,9 @@ import '../../core/widgets/load_error.dart';
 import '../../core/widgets/screen_scaffold.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_repository.dart';
+import '../invoices/invoice_labels.dart';
 import '../spaces/spaces_repository.dart';
+import 'delete_group_dialog.dart';
 import 'groups_models.dart';
 import 'groups_repository.dart';
 import 'role_labels.dart';
@@ -199,12 +201,21 @@ class MembersScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: Tokens.s5),
-        if (space != null && space.kind == SpaceKind.group)
+        if (space != null &&
+            space.kind == SpaceKind.group &&
+            !(isOwner && space.memberCount <= 1))
           TextButton.icon(
             style: TextButton.styleFrom(foregroundColor: scheme.error),
             onPressed: () => _leave(context, ref, space),
             icon: const Icon(Icons.logout),
             label: Text(l.leaveGroup),
+          ),
+        if (space != null && space.kind == SpaceKind.group && isOwner)
+          TextButton.icon(
+            style: TextButton.styleFrom(foregroundColor: scheme.error),
+            onPressed: () => _delete(context, ref, space),
+            icon: const Icon(Icons.delete_outline),
+            label: Text(l.deleteGroup),
           ),
       ],
     );
@@ -372,8 +383,47 @@ class MembersScreen extends ConsumerWidget {
     ref.read(groupsVersionProvider.notifier).bump();
   }
 
+  Future<void> _delete(BuildContext context, WidgetRef ref, Space space) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (_) => DeleteGroupDialog(space: space),
+    );
+    if (yes != true) return;
+    try {
+      await ref.read(groupsRepositoryProvider).deleteGroup(spaceId);
+      ref.invalidate(mySpacesProvider);
+      if (context.mounted) context.go('/spaces');
+      messenger.showSnackBar(SnackBar(content: Text(l.groupDeleted)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(friendlyError(l, e))));
+    }
+  }
+
   Future<void> _leave(BuildContext context, WidgetRef ref, Space space) async {
     final l = AppLocalizations.of(context);
+    final owners = ref
+        .read(membersProvider(spaceId))
+        .value
+        ?.where((m) => m.role == MemberRole.owner)
+        .length;
+    if (space.myRole == MemberRole.owner && owners == 1) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(l.lastOwnerLeave),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
     final yes = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -398,10 +448,17 @@ class MembersScreen extends ConsumerWidget {
       await ref.read(groupsRepositoryProvider).leave(spaceId);
       ref.invalidate(mySpacesProvider);
       if (context.mounted) context.go('/spaces');
-    } catch (_) {
+    } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l.errorGeneric)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$e'.contains('at least one owner')
+                  ? l.lastOwnerLeave
+                  : friendlyError(l, e),
+            ),
+          ),
+        );
       }
     }
   }

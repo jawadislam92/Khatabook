@@ -1,6 +1,6 @@
 {
-  "build": 6,
-  "version": "1.3.0",
+  "build": 7,
+  "version": "1.3.1",
   "apk": "https://duebook.sparkingasia.com/duebook.apk",
-  "notes": "Job alerts now reach your phone. Please allow notifications when asked. The owner can choose how many alerts a job gives."
+  "notes": "Job alerts now reach your phone, please allow notifications when asked. The owner can choose how many alerts a job gives, and can delete a whole group."
 }

@@ -417,6 +417,18 @@
     }
   },
   "remove": "نکالیں",
+  "deleteGroup": "یہ گروپ ختم کریں",
+  "deleteGroupTitle": "{space} ختم کریں؟",
+  "@deleteGroupTitle": {"placeholders": {"space": {"type": "String"}}},
+  "deleteGroupWarning": "اس کے تمام گاہک، اندراج، کام اور بل غائب ہو جائیں گے۔ ایپ میں اسے واپس نہیں لایا جا سکتا۔",
+  "deleteGroupOthers": "{count, plural, =1{1 اور شخص کے پاس سے بھی ختم ہو جائے گا۔} other{{count} اور لوگوں کے پاس سے بھی ختم ہو جائے گا۔}}",
+  "@deleteGroupOthers": {"placeholders": {"count": {"type": "int"}}},
+  "deleteGroupPin": "ختم کرنے کے لیے اپنا PIN لکھیں",
+  "deleteGroupName": "ختم کرنے کے لیے گروپ کا نام لکھیں",
+  "deleteGroupNameWrong": "نام ایک جیسا نہیں ہے۔",
+  "deleteGroupYes": "ختم کریں",
+  "groupDeleted": "گروپ ختم ہو گیا",
+  "lastOwnerLeave": "آپ اکیلے مالک ہیں، اس لیے گروپ نہیں چھوڑ سکتے۔ پہلے کسی اور کو مالک بنائیں، یا گروپ ختم کریں۔",
   "leaveGroup": "یہ گروپ چھوڑیں",
   "leaveConfirm": "{space} چھوڑ دیں؟ واپس آنے کے لیے نئی دعوت چاہیے ہوگی۔",
   "@leaveConfirm": {

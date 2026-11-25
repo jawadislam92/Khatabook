@@ -16,6 +16,9 @@ abstract class GroupsRepository {
   Future<void> changeRole(String spaceId, String userId, MemberRole role);
   Future<void> removeMember(String spaceId, String userId);
   Future<void> leave(String spaceId);
+
+  /// The whole group, for everyone. Owner only.
+  Future<void> deleteGroup(String spaceId);
   Future<DateTime?> lockedUntil(String spaceId);
   Future<void> setLock(String spaceId, DateTime? until);
 }
@@ -132,6 +135,10 @@ class SupabaseGroupsRepository implements GroupsRepository {
   @override
   Future<void> leave(String spaceId) =>
       _c.rpc<void>('leave_space', params: {'p_space': spaceId});
+
+  @override
+  Future<void> deleteGroup(String spaceId) =>
+      _c.rpc<void>('delete_space', params: {'p_space': spaceId});
 
   @override
   Future<DateTime?> lockedUntil(String spaceId) async {
@@ -348,6 +355,9 @@ class PreviewGroupsRepository implements GroupsRepository {
 
   @override
   Future<void> leave(String spaceId) async => removeMember(spaceId, 'preview');
+
+  @override
+  Future<void> deleteGroup(String spaceId) async => _members.remove(spaceId);
 
   @override
   Future<DateTime?> lockedUntil(String spaceId) async => _locks[spaceId];
