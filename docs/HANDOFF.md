@@ -91,7 +91,8 @@ Branch: everything is on `claude/khatabook-field-service-plan-7dg24c`. There is 
 Reported: Leave this group said "Something went wrong". Cause: the only owner cannot leave (trigger `protect_last_owner`), and the app hid the reason.
 - Migration `20261126000100_delete_space.sql`, test `14_delete_space_test.sql`: `delete_space` (owner only) sets `spaces.deleted_at`, cancels waiting alerts, removes inbox rows and open invites. `is_member`, `member_role_in` and `is_job_assignee` ignore deleted spaces, so everything in it is hidden for everyone. Rows are kept; to restore: `update public.spaces set deleted_at = null where id = ...`.
 - App: `delete_group_dialog.dart` asks for the PIN (the group name when no PIN is set). Leave explains the only-owner rule, and is hidden when you are alone in the group.
-- Migration is on dev and prod. The 1.3.1 APK and version.json still have to be uploaded to Hostinger.
+- Migration is on dev and prod.
+- The 1.3.1 APK was built without `GOOGLE_WEB_CLIENT_ID` and `APP_VERSION` (they were missing from the build command in this file, now added), so Google sign in falls back to the browser and it shows version 0.1.0. 1.3.2 (build 8) is the same app with both and replaces it. version.json on the website shows build 8 (26 November). Phones still to update and the first real alert on a phone still to be confirmed.
 
 ### Job alerts that reach phones, and alert settings (25 November, version 1.3.0, build 6)
 Reported: assigned people got no alert unless they opened the app. Cause: the family APKs 1.0 to 1.2.1 were built without `FIREBASE_ENABLED=true` and without `google-services.json`, so phones never registered (prod had one row in `devices`). **Every family APK must be built with both**, and must be checked by seeing a new `devices` row.
@@ -183,14 +184,14 @@ cp build/app/outputs/flutter-apk/app-release.apk ../duebook-preview.apk
 flutter build apk --release \
   --dart-define=SUPABASE_URL=https://jepcsftdjejjzhfjnavy.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=sb_publishable_oTLjMBC0q95QkO2UrJEaSg_-IkMyi0C \
-  --dart-define=FIREBASE_ENABLED=true
+  --dart-define=GOOGLE_WEB_CLIENT_ID=490215278559-ofujd9u7gbfke9ungek71mino614er4h.apps.googleusercontent.com --dart-define=APP_VERSION=<version from pubspec> --dart-define=FIREBASE_ENABLED=true
 cp build/app/outputs/flutter-apk/app-release.apk ../duebook-dev.apk
 
 # prod backend, push on
 flutter build apk --release \
   --dart-define=SUPABASE_URL=https://ohrnkvzemgfrxcuknamh.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=sb_publishable_LQIHmZXNQ84ck5X3fKb6iw_HKjDceT3 \
-  --dart-define=FIREBASE_ENABLED=true
+  --dart-define=GOOGLE_WEB_CLIENT_ID=490215278559-ofujd9u7gbfke9ungek71mino614er4h.apps.googleusercontent.com --dart-define=APP_VERSION=<version from pubspec> --dart-define=FIREBASE_ENABLED=true
 cp build/app/outputs/flutter-apk/app-release.apk ../duebook-prod.apk
 ```
 All three builds share the package name, so installing one replaces another on the phone.
