@@ -17,6 +17,7 @@ import '../invoices/invoice_labels.dart';
 import '../invoices/invoice_models.dart';
 import '../invoices/invoices_repository.dart';
 import '../spaces/spaces_repository.dart';
+import 'alert_settings.dart';
 import 'job_labels.dart';
 import 'jobs_models.dart';
 import 'jobs_repository.dart';
@@ -376,6 +377,18 @@ class JobDetailScreen extends ConsumerWidget {
                     context.push('/space/$spaceId/job/$jobId/items'),
                 icon: const Icon(Icons.inventory_2_outlined),
                 label: Text(l.itemsToTake),
+              ),
+            ),
+          if (manager && job.status.isOpen && job.status != JobStatus.finished)
+            Padding(
+              padding: const EdgeInsets.only(top: Tokens.s2),
+              child: OutlinedButton.icon(
+                onPressed: () => _run(context, () async {
+                  final r = await pickJobAlerts(context, job.alerts);
+                  if (r != null) await repo.setJobAlerts(jobId, r.alerts);
+                }),
+                icon: const Icon(Icons.notifications_active_outlined),
+                label: Text(l.alertsWith(alertLevelLabel(l, job.alerts))),
               ),
             ),
           if (job.status == JobStatus.invoiced || job.status == JobStatus.paid)

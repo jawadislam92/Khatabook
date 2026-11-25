@@ -3,6 +3,7 @@ import 'package:duebook/features/groups/groups_models.dart';
 import 'package:duebook/features/groups/groups_repository.dart';
 import 'package:duebook/features/invoices/invoice_models.dart';
 import 'package:duebook/features/invoices/invoices_repository.dart';
+import 'package:duebook/features/jobs/job_alerts.dart';
 import 'package:duebook/features/jobs/jobs_models.dart';
 import 'package:duebook/features/jobs/jobs_repository.dart';
 import 'package:duebook/features/ledger/ledger_models.dart';
@@ -66,6 +67,9 @@ class FlakyJobs extends PreviewJobsRepository {
     bool includeInactive = false,
   }) =>
       net.read(() => super.catalog(spaceId, includeInactive: includeInactive));
+  @override
+  Future<JobAlerts> spaceAlerts(String spaceId) =>
+      net.read(() => super.spaceAlerts(spaceId));
   @override
   Future<List<AppNotification>> notifications() =>
       net.read(super.notifications);

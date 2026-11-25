@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/config/app_config.dart';
+import '../../core/push/push_card.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
@@ -23,6 +24,7 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l.notifications)),
       body: Column(
         children: [
+          const PushCard(),
           if (!AppConfig.pushEnabled)
             Container(
               margin: const EdgeInsets.all(Tokens.s4),

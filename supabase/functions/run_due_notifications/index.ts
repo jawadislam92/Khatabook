@@ -20,6 +20,14 @@ function fmtTime(iso: string): string {
   return d.toLocaleString("en-PK", { timeZone: "Asia/Karachi", weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 }
 
+// "In 15 minutes", "In one hour", "In 2 hours".
+function soonTitle(m: number, ur: boolean): string {
+  if (m === 60) return ur ? "ایک گھنٹے میں" : "In one hour";
+  if (m === 1440) return ur ? "ایک دن میں" : "In one day";
+  if (m % 60 === 0) return ur ? `${m / 60} گھنٹے میں` : `In ${m / 60} hours`;
+  return ur ? `${m} منٹ میں` : `In ${m} minutes`;
+}
+
 async function compose(row: Row, lang: string): Promise<{ title: string; body: string; link: string } | null> {
   const p = row.payload as Record<string, string>;
   const ur = lang === "ur";
@@ -42,12 +50,14 @@ async function compose(row: Row, lang: string): Promise<{ title: string; body: s
     case "job_unconfirmed": {
       const { data } = await supabase.from("job_assignees").select("confirmed_at").eq("job_id", row.job_id!).not("confirmed_at", "is", null).limit(1);
       if (data && data.length > 0) return null; // someone confirmed, nothing to nag about
+      const { data: job } = await supabase.from("jobs").select("status").eq("id", row.job_id!).maybeSingle();
+      if (job && job.status !== "scheduled") return null; // steps were skipped, the work is already moving
       return { title: ur ? "ابھی تک تصدیق نہیں" : "Nobody has confirmed", body: ur ? `${customer} کا ${when} والا کام ابھی تک کسی نے کنفرم نہیں کیا۔` : `The ${when} job for ${customer} has not been confirmed by anyone yet.`, link };
     }
     case "jobs_tomorrow":
       return { title: ur ? "کل کا کام" : "Tomorrow's job", body: `${customer}: ${p.title}, ${when}`, link };
     case "job_soon":
-      return { title: ur ? "ایک گھنٹے میں" : "In one hour", body: `${customer}: ${p.title}${p.address ? ", " + p.address : ""}`, link };
+      return { title: soonTitle(Number(p.minutes ?? 60), ur), body: `${customer}: ${p.title}${p.address ? ", " + p.address : ""}`, link };
     case "job_status": {
       let actor = "";
       if (p.actor_id) {
@@ -145,7 +155,7 @@ Deno.serve(async (req) => {
       const { data: devices } = await supabase.from("devices").select("user_id, fcm_token").in("user_id", row.recipients);
       const pushes: Push[] = [];
       let first: { title: string; body: string; link: string } | null = null;
-      for (const r of row.recipients) {
+      for (const r of new Set(row.recipients)) {
         const lang = profiles?.find((p) => p.user_id === r)?.language ?? "en";
         const msg = await compose(row, lang);
         if (!msg) { skipped++; break; }

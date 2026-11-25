@@ -6,6 +6,7 @@ import 'package:local_auth/local_auth.dart';
 
 import '../../core/security/app_lock.dart';
 import '../../core/security/pin_store.dart';
+import '../../core/push/push_service.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/widgets/brand_header.dart';
@@ -135,6 +136,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     await ref.read(pinStoreProvider).clear();
     await ref.read(appSettingsProvider.notifier).resetSecurity();
     await ref.read(appLockProvider.notifier).pinWasCleared();
+    await ref.read(pushServiceProvider).signedOut();
     await ref.read(authRepositoryProvider).signOut();
   }
 

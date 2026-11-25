@@ -1,6 +1,6 @@
 {
-  "build": 5,
-  "version": "1.2.1",
+  "build": 6,
+  "version": "1.3.0",
   "apk": "https://duebook.sparkingasia.com/duebook.apk",
-  "notes": "Works without internet: shows saved data, keeps your changes and sends them when the internet is back"
+  "notes": "Job alerts now reach your phone. Please allow notifications when asked. The owner can choose how many alerts a job gives."
 }

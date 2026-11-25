@@ -1,3 +1,5 @@
+import 'job_alerts.dart';
+
 enum JobType { cctvInstall, cctvRepair, solarInstall, solarService, other }
 
 enum JobStatus {
@@ -80,6 +82,7 @@ class Job {
     this.holdReason,
     this.holdNote,
     this.suggestedAt,
+    this.alerts,
   });
   final String id;
   final String spaceId;
@@ -103,6 +106,9 @@ class Job {
 
   /// The date the installer suggested for the next visit.
   final DateTime? suggestedAt;
+
+  /// This job's own alert choice; null follows the business.
+  final JobAlerts? alerts;
 
   bool isAssignedTo(String userId) => assignees.any((a) => a.userId == userId);
   bool get anyoneConfirmed => assignees.any((a) => a.confirmed);
@@ -139,6 +145,7 @@ class Job {
     suggestedAt: status == null || status == JobStatus.onHold
         ? suggestedAt
         : null,
+    alerts: alerts,
   );
 
   /// The same job stopped on site.
@@ -161,6 +168,29 @@ class Job {
     holdReason: reason,
     holdNote: note,
     suggestedAt: suggested,
+    alerts: alerts,
+  );
+
+  Job withAlerts(JobAlerts? a) => Job(
+    id: id,
+    spaceId: spaceId,
+    customerId: customerId,
+    customerName: customerName,
+    customerPhone: customerPhone,
+    title: title,
+    type: type,
+    scheduledAt: scheduledAt,
+    address: address,
+    notes: notes,
+    estimatePaisa: estimatePaisa,
+    status: status,
+    assignees: assignees,
+    createdBy: createdBy,
+    createdAt: createdAt,
+    holdReason: holdReason,
+    holdNote: holdNote,
+    suggestedAt: suggestedAt,
+    alerts: a,
   );
 }
 
@@ -251,6 +281,7 @@ class NewJob {
     this.address,
     this.notes,
     this.estimatePaisa,
+    this.alerts,
   });
   final String spaceId;
   final String customerId;
@@ -261,6 +292,7 @@ class NewJob {
   final String? address;
   final String? notes;
   final int? estimatePaisa;
+  final JobAlerts? alerts;
 }
 
 const itemCategories = [

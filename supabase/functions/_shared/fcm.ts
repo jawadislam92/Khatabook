@@ -47,26 +47,45 @@ export async function accessToken(sa: ServiceAccount): Promise<string> {
 export type Push = { token: string; title: string; body: string; data: Record<string, string> };
 
 /// Returns the list of tokens FCM reported as dead, so callers can remove them.
+/// One phone that fails never stops the others. It throws, so the alert is
+/// tried again, only when no phone at all was reached; otherwise a retry
+/// would show the same alert twice on the phones that already have it.
 export async function sendPushes(sa: ServiceAccount, pushes: Push[]): Promise<string[]> {
   const dead: string[] = [];
   if (pushes.length === 0) return dead;
   const bearer = await accessToken(sa);
+  let ok = 0;
+  const errors: string[] = [];
   await Promise.all(pushes.map(async (p) => {
-    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json" },
-      body: JSON.stringify({
-        message: {
-          token: p.token,
-          notification: { title: p.title, body: p.body },
-          data: p.data,
-          android: { priority: "high", notification: { channel_id: "duebook_jobs", default_sound: true } },
-          apns: { payload: { aps: { sound: "default" } } },
-        },
-      }),
-    });
-    if (res.status === 404 || res.status === 410) dead.push(p.token);
-    else if (!res.ok) throw new Error(`fcm: ${res.status} ${await res.text()}`);
+    try {
+      const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          message: {
+            token: p.token,
+            notification: { title: p.title, body: p.body },
+            data: p.data,
+            android: { priority: "high", notification: { channel_id: "duebook_jobs", default_sound: true } },
+            apns: { payload: { aps: { sound: "default" } } },
+          },
+        }),
+      });
+      if (res.ok) {
+        await res.body?.cancel();
+        ok++;
+        return;
+      }
+      const text = await res.text();
+      if (res.status === 404 || res.status === 410 || text.includes("UNREGISTERED")) dead.push(p.token);
+      else errors.push(`fcm: ${res.status} ${text}`);
+    } catch (e) {
+      errors.push(String(e));
+    }
   }));
+  if (errors.length) {
+    console.error("push failed", errors.length, "of", pushes.length, errors[0].slice(0, 300));
+    if (ok === 0) throw new Error(errors[0]);
+  }
   return dead;
 }

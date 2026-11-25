@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/config/app_config.dart';
 import '../ledger/ledger_repository.dart';
+import 'job_alerts.dart';
 import 'jobs_models.dart';
 
 abstract class JobsRepository {
@@ -48,6 +49,16 @@ abstract class JobsRepository {
   Future<List<AppNotification>> notifications();
   Future<void> markRead(String id);
   Future<void> registerDevice(String token, String platform);
+
+  /// Sign out: this phone stops getting this person's alerts.
+  Future<void> unregisterDevice(String token);
+
+  /// How many alerts jobs give, unless a job has its own choice.
+  Future<JobAlerts> spaceAlerts(String spaceId);
+  Future<void> setSpaceAlerts(String spaceId, JobAlerts alerts);
+
+  /// Null goes back to the business default.
+  Future<void> setJobAlerts(String jobId, JobAlerts? alerts);
   Stream<void> changes(String spaceId);
 }
 
@@ -107,6 +118,7 @@ class SupabaseJobsRepository implements JobsRepository {
     suggestedAt: r['suggested_at'] == null
         ? null
         : DateTime.parse(r['suggested_at'] as String).toLocal(),
+    alerts: JobAlerts.fromJson(r['alert_settings']),
   );
 
   @override
@@ -185,6 +197,7 @@ class SupabaseJobsRepository implements JobsRepository {
       'address': j.address,
       'notes': j.notes,
       'estimate_paisa': j.estimatePaisa,
+      'alerts': j.alerts?.toJson(),
       'created_by': _me,
       'created_at': _ts(DateTime.now()),
       'customer_name': party?['name'] ?? '',
@@ -229,6 +242,7 @@ class SupabaseJobsRepository implements JobsRepository {
       'p_notes': p['notes'],
       'p_estimate_paisa': p['estimate_paisa'],
       'p_id': p['id'],
+      if (p['alerts'] != null) 'p_alerts': p['alerts'],
     },
   );
 
@@ -476,15 +490,47 @@ class SupabaseJobsRepository implements JobsRepository {
 
   @override
   Future<void> registerDevice(String token, String platform) async {
-    final uid = _c.auth.currentUser?.id;
-    if (uid == null) return;
-    await _c.from('devices').upsert({
-      'user_id': uid,
-      'fcm_token': token,
-      'platform': platform,
-      'app_version': AppConfig.appVersion,
-      'last_seen_at': _ts(DateTime.now()),
-    }, onConflict: 'fcm_token');
+    if (_c.auth.currentUser == null) return;
+    // The server moves the phone to whoever is signed in now.
+    await _c.rpc<void>(
+      'register_device',
+      params: {
+        'p_token': token,
+        'p_platform': platform,
+        'p_version': AppConfig.appVersion,
+      },
+    );
+  }
+
+  @override
+  Future<void> unregisterDevice(String token) =>
+      _c.from('devices').delete().eq('fcm_token', token);
+
+  @override
+  Future<JobAlerts> spaceAlerts(String spaceId) async {
+    final r = offlineRow(
+      await _off.read(
+        'space_alerts:$spaceId',
+        () => _c.from('spaces').select('settings').eq('id', spaceId).single(),
+      ),
+    );
+    return JobAlerts.fromJson((r?['settings'] as Map?)?['job_alerts']) ??
+        const JobAlerts.normal();
+  }
+
+  @override
+  Future<void> setSpaceAlerts(String spaceId, JobAlerts alerts) => _c.rpc<void>(
+    'set_space_alerts',
+    params: {'p_space': spaceId, 'p_alerts': alerts.toJson()},
+  );
+
+  @override
+  Future<void> setJobAlerts(String jobId, JobAlerts? alerts) async {
+    await _c.rpc<void>(
+      'set_job_alerts',
+      params: {'p_job': jobId, 'p_alerts': alerts?.toJson()},
+    );
+    _local.add('*');
   }
 
   @override
@@ -775,6 +821,7 @@ class PreviewJobsRepository implements JobsRepository {
       address: n.address,
       notes: n.notes,
       estimatePaisa: n.estimatePaisa,
+      alerts: n.alerts,
       status: JobStatus.scheduled,
       assignees: [
         for (final id in n.assigneeIds)
@@ -893,6 +940,7 @@ class PreviewJobsRepository implements JobsRepository {
       ],
       createdBy: 'preview',
       createdAt: DateTime.now(),
+      alerts: j.alerts,
     );
     _jobs.add(n);
     _events[n.id] = [
@@ -1007,6 +1055,23 @@ class PreviewJobsRepository implements JobsRepository {
     _changes.add('*');
   }
 
+  final _spaceAlerts = <String, JobAlerts>{};
+
+  @override
+  Future<void> unregisterDevice(String token) async {}
+
+  @override
+  Future<JobAlerts> spaceAlerts(String spaceId) async =>
+      _spaceAlerts[spaceId] ?? const JobAlerts.normal();
+
+  @override
+  Future<void> setSpaceAlerts(String spaceId, JobAlerts alerts) async =>
+      _spaceAlerts[spaceId] = alerts;
+
+  @override
+  Future<void> setJobAlerts(String jobId, JobAlerts? alerts) async =>
+      _replace((await job(jobId))!.withAlerts(alerts));
+
   @override
   Future<void> registerDevice(String token, String platform) async {}
 
@@ -1071,3 +1136,8 @@ final notificationsProvider = FutureProvider<List<AppNotification>>((ref) {
   ref.watch(jobsVersionProvider('*'));
   return ref.watch(jobsRepositoryProvider).notifications();
 });
+
+/// The business default for alerts.
+final spaceAlertsProvider = FutureProvider.family<JobAlerts, String>(
+  (ref, spaceId) => ref.watch(jobsRepositoryProvider).spaceAlerts(spaceId),
+);

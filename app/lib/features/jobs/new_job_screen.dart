@@ -12,6 +12,8 @@ import '../../l10n/app_localizations.dart';
 import '../groups/groups_repository.dart';
 import '../ledger/ledger_repository.dart';
 import '../ledger/party_form.dart';
+import 'alert_settings.dart';
+import 'job_alerts.dart';
 import 'job_labels.dart';
 import 'jobs_models.dart';
 import 'jobs_repository.dart';
@@ -35,6 +37,7 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
     return DateTime(n.year, n.month, n.day, 10);
   }();
   final _who = <String>{};
+  JobAlerts? _alerts;
   bool _busy = false;
 
   @override
@@ -211,6 +214,18 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
               prefixText: 'Rs ',
             ),
           ),
+          const SizedBox(height: Tokens.s3),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.notifications_active_outlined),
+            title: Text(l.alertsThisJob),
+            subtitle: Text(alertLevelLabel(l, _alerts)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final r = await pickJobAlerts(context, _alerts);
+              if (r != null && mounted) setState(() => _alerts = r.alerts);
+            },
+          ),
           const SizedBox(height: Tokens.s5),
           BigButton(
             label: l.save,
@@ -302,6 +317,7 @@ class _NewJobScreenState extends ConsumerState<NewJobScreen> {
                   : _address.text.trim(),
               notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
               estimatePaisa: Money.parse(_estimate.text),
+              alerts: _alerts,
             ),
           );
       if (!mounted) return;

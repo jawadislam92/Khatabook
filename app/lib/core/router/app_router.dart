@@ -14,6 +14,7 @@ import '../../features/invoices/business_profile_screen.dart';
 import '../../features/invoices/finish_job_screen.dart';
 import '../../features/invoices/invoice_screen.dart';
 import '../../features/invoices/invoices_tab.dart';
+import '../../features/jobs/alert_settings.dart';
 import '../../features/jobs/business_home_screen.dart';
 import '../../features/jobs/job_detail_screen.dart';
 import '../../features/jobs/new_job_screen.dart';
@@ -186,6 +187,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'profile',
             builder: (_, st) =>
                 BusinessProfileScreen(spaceId: st.pathParameters['sid']!),
+          ),
+          GoRoute(
+            path: 'alerts',
+            builder: (_, st) =>
+                AlertSettingsScreen(spaceId: st.pathParameters['sid']!),
           ),
           GoRoute(
             path: 'items-report',

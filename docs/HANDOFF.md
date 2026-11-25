@@ -87,6 +87,12 @@ Branch: everything is on `claude/khatabook-field-service-plan-7dg24c`. There is 
 - **Local test login (web on this PC only).** `app/tool_build_local_web.sh` builds the web app with `DEV_AUTO_EMAIL`/`DEV_AUTO_PASSWORD` from `app/.env.qa`; it then signs in as the QA user by itself and skips the welcome and PIN screens. The rule (`devAutoSignInAllowed` in `app_config.dart`) only allows it on the web at localhost or 127.0.0.1; phones and normal builds ignore it (`test/dev_auto_sign_in_test.dart`). Never upload that build: it carries the QA password. Serve it with the `duebook-web` entry in `.claude/launch.json` (python http.server on 8099).
 - Node for the tools: `C:/laragon/bin/nodejs/node-v22`, with `NODE_PATH=/c/src/pwtools/node_modules`.
 
+### Job alerts that reach phones, and alert settings (25 November, version 1.3.0, build 6)
+Reported: assigned people got no alert unless they opened the app. Cause: the family APKs 1.0 to 1.2.1 were built without `FIREBASE_ENABLED=true` and without `google-services.json`, so phones never registered (prod had one row in `devices`). **Every family APK must be built with both**, and must be checked by seeing a new `devices` row.
+- App: `core/push/` registers per person, re-checks on resume, shows alerts while open, shows a card when alerts are off or registration failed, unregisters on sign out. `MainActivity.kt` makes the `duebook_jobs` channel (high importance).
+- Alert settings: owner default at `/business/:sid/alerts` (`spaces.settings->job_alerts`), one job's own choice in `jobs.alert_settings`. Levels few, normal, many, custom. New job is always sent. Migration `20261125000100_alert_settings.sql`, test 13. The app needs the migration first (it calls `set_space_alerts`, `set_job_alerts`, `register_device`).
+- Edge Function `run_due_notifications`: one bad phone no longer fails the rest; no unconfirmed reminder once the work has moved on. Migration and function are on dev and prod (prod function version 11). The APK and version.json still have to be uploaded to Hostinger; nothing has been tried on a real phone yet.
+
 ### Offline mode (12 November, version 1.2.0, build 4; fix in 1.2.1, build 5)
 
 1.2.1 (13 November): when the phone already knows it is offline, `OfflineSync.read` now gives the server 2 seconds even when nothing is saved for that screen. Before, a screen never opened online (for example a person's entry list) waited forever and spun. Test: "offline, a screen with nothing saved never waits on a silent server". `tool_live_check.js` now taps only elements on screen.

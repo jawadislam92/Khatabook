@@ -32,10 +32,15 @@ class DuebookApp extends ConsumerStatefulWidget {
 
 class _DuebookAppState extends ConsumerState<DuebookApp> {
   StreamSubscription<Uri>? _links;
+  late final AppLifecycleListener _life;
 
   @override
   void initState() {
     super.initState();
+    // Back from the phone's settings, or internet is back: look again.
+    _life = AppLifecycleListener(
+      onResume: () => ref.read(pushServiceProvider).check(),
+    );
     // Error reports say which screen was open.
     // A screen opened with push sits on top of the base location, so the
     // top match is the one on screen.
@@ -82,6 +87,7 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
 
   @override
   void dispose() {
+    _life.dispose();
     _links?.cancel();
     super.dispose();
   }
@@ -91,12 +97,14 @@ class _DuebookAppState extends ConsumerState<DuebookApp> {
     final settings = ref.watch(appSettingsProvider);
     final router = ref.watch(routerProvider);
     ref.listen(currentUserProvider, (_, next) {
-      if (next.value != null) ref.read(pushServiceProvider).start();
+      final id = next.value?.id;
+      if (id != null) ref.read(pushServiceProvider).start(id);
     });
     final locale = settings.locale;
 
     return MaterialApp.router(
       onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
+      scaffoldMessengerKey: appMessengerKey,
       routerConfig: router,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

@@ -19,6 +19,7 @@ Map<String, dynamic> pendingJobRow(Map<String, dynamic> p) => {
   'hold_note': null,
   'suggested_at': null,
   'follow_up_of': p['follow_up_of'],
+  'alert_settings': p['alerts'],
   'parties': {'name': p['customer_name'], 'phone_display': p['customer_phone']},
   'job_assignees': [
     for (final a in (p['assignees'] as List? ?? const []))
@@ -52,6 +53,7 @@ Map<String, dynamic> followUpParams({
   'created_by': createdBy,
   'created_at': DateTime.now().toUtc().toIso8601String(),
   'follow_up_of': base['id'],
+  'alerts': base['alert_settings'],
   'customer_name': (base['parties'] as Map?)?['name'],
   'customer_phone': (base['parties'] as Map?)?['phone_display'],
   'assignees': [

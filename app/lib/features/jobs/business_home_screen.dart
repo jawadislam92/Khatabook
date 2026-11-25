@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/push/push_card.dart';
 import '../../core/theme/tokens.dart';
 import '../../core/widgets/load_error.dart';
 import '../../l10n/app_localizations.dart';
@@ -49,6 +50,7 @@ class _BusinessHomeScreenState extends ConsumerState<BusinessHomeScreen> {
       _TodayTab(
         spaceId: widget.spaceId,
         manager: manager,
+        owner: space?.myRole == MemberRole.owner,
         spaceName: space?.name ?? '',
       ),
       _JobsTab(spaceId: widget.spaceId),
@@ -105,10 +107,12 @@ class _TodayTab extends ConsumerWidget {
   const _TodayTab({
     required this.spaceId,
     required this.manager,
+    required this.owner,
     required this.spaceName,
   });
   final String spaceId;
   final bool manager;
+  final bool owner;
   final String spaceName;
 
   @override
@@ -125,6 +129,12 @@ class _TodayTab extends ConsumerWidget {
       appBar: AppBar(
         title: Text(spaceName),
         actions: [
+          if (owner)
+            IconButton(
+              tooltip: l.alertSettings,
+              icon: const Icon(Icons.edit_notifications_outlined),
+              onPressed: () => context.push('/business/$spaceId/alerts'),
+            ),
           IconButton(
             tooltip: l.notifications,
             icon: const Icon(Icons.notifications_outlined),
@@ -137,104 +147,120 @@ class _TodayTab extends ConsumerWidget {
           ),
         ],
       ),
-      body: all.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            LoadError(onRetry: () => ref.invalidate(jobsProvider(spaceId))),
-        data: (jobs) {
-          final mine = manager
-              ? jobs
-              : jobs.where((j) => j.isAssignedTo(me)).toList();
-          // Jobs stopped on site wait for a new date; show them first.
-          final onHold = mine
-              .where((j) => j.status == JobStatus.onHold)
-              .toList();
-          final open = mine
-              .where((j) => j.status.isOpen && j.status != JobStatus.onHold)
-              .toList();
-          final todays = open
-              .where(
-                (j) =>
-                    !j.scheduledAt.isBefore(today) &&
-                    j.scheduledAt.isBefore(tomorrow),
-              )
-              .toList();
-          final overdue = open
-              .where(
-                (j) =>
-                    j.scheduledAt.isBefore(today) &&
-                    j.status != JobStatus.finished,
-              )
-              .toList();
-          final upcoming = open
-              .where((j) => !j.scheduledAt.isBefore(tomorrow))
-              .take(5)
-              .toList();
-          Widget section(String title, List<Job> list, {bool date = false}) =>
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      0,
-                      Tokens.s4,
-                      0,
-                      Tokens.s2,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
+      body: Column(
+        children: [
+          const PushCard(),
+          Expanded(
+            child: all.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => LoadError(
+                onRetry: () => ref.invalidate(jobsProvider(spaceId)),
+              ),
+              data: (jobs) {
+                final mine = manager
+                    ? jobs
+                    : jobs.where((j) => j.isAssignedTo(me)).toList();
+                // Jobs stopped on site wait for a new date; show them first.
+                final onHold = mine
+                    .where((j) => j.status == JobStatus.onHold)
+                    .toList();
+                final open = mine
+                    .where(
+                      (j) => j.status.isOpen && j.status != JobStatus.onHold,
+                    )
+                    .toList();
+                final todays = open
+                    .where(
+                      (j) =>
+                          !j.scheduledAt.isBefore(today) &&
+                          j.scheduledAt.isBefore(tomorrow),
+                    )
+                    .toList();
+                final overdue = open
+                    .where(
+                      (j) =>
+                          j.scheduledAt.isBefore(today) &&
+                          j.status != JobStatus.finished,
+                    )
+                    .toList();
+                final upcoming = open
+                    .where((j) => !j.scheduledAt.isBefore(tomorrow))
+                    .take(5)
+                    .toList();
+                Widget section(
+                  String title,
+                  List<Job> list, {
+                  bool date = false,
+                }) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        0,
+                        Tokens.s4,
+                        0,
+                        Tokens.s2,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: text.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
-                        ),
-                        Text(l.jobsCount(list.length), style: text.bodySmall),
-                      ],
+                          Text(l.jobsCount(list.length), style: text.bodySmall),
+                        ],
+                      ),
                     ),
-                  ),
-                  for (final j in list) ...[
-                    JobCard(
-                      job: j,
-                      showDate: date,
-                      onTap: () => context.push('/space/$spaceId/job/${j.id}'),
-                    ),
-                    const SizedBox(height: Tokens.s2),
+                    for (final j in list) ...[
+                      JobCard(
+                        job: j,
+                        showDate: date,
+                        onTap: () =>
+                            context.push('/space/$spaceId/job/${j.id}'),
+                      ),
+                      const SizedBox(height: Tokens.s2),
+                    ],
                   ],
-                ],
-              );
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              Tokens.s4,
-              0,
-              Tokens.s4,
-              Tokens.s7 * 2,
-            ),
-            children: [
-              Text(
-                DateFormat.yMMMMEEEEd(locale).format(now),
-                style: text.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              if (onHold.isNotEmpty)
-                section(l.statusOnHold, onHold, date: true),
-              if (overdue.isNotEmpty) section(l.earlier, overdue, date: true),
-              section(l.today, todays),
-              if (todays.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(Tokens.s3),
-                  child: Text(
-                    manager ? l.noJobsToday : l.noMyJobs,
-                    style: text.bodyLarge,
+                );
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    Tokens.s4,
+                    0,
+                    Tokens.s4,
+                    Tokens.s7 * 2,
                   ),
-                ),
-              if (upcoming.isNotEmpty) section(l.later, upcoming, date: true),
-            ],
-          );
-        },
+                  children: [
+                    Text(
+                      DateFormat.yMMMMEEEEd(locale).format(now),
+                      style: text.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (onHold.isNotEmpty)
+                      section(l.statusOnHold, onHold, date: true),
+                    if (overdue.isNotEmpty)
+                      section(l.earlier, overdue, date: true),
+                    section(l.today, todays),
+                    if (todays.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(Tokens.s3),
+                        child: Text(
+                          manager ? l.noJobsToday : l.noMyJobs,
+                          style: text.bodyLarge,
+                        ),
+                      ),
+                    if (upcoming.isNotEmpty)
+                      section(l.later, upcoming, date: true),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
